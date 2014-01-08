@@ -1,0 +1,4 @@
+katana_dictionary_device:
+    resource: "@KatanaDictionaryBundle/Controller/"
+    type:     annotation
+    prefix:   /

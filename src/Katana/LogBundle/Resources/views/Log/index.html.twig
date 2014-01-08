@@ -1,0 +1,45 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+
+    {% include '::navbar.html.twig' %}
+
+    <style>
+        .log_item {
+            margin-bottom: 5px;
+            border-bottom: 1px dotted grey;
+        }
+        .log_time{
+            color: grey;
+            font-size: 0.9em;
+        }
+        .log_message {
+            font-style: italic;
+        }
+    </style>
+
+    <h3>Новости</h3>
+
+    <div class="well">
+        {% for entity in entities %}
+        <div class="log_item">
+            <div class="log_action">
+                <span class="label {{ actionToCss[entity.action] }}">{{ entity.action }}</span>
+                <span class="log_message">{{ entity.message }}</span>
+            </div>
+
+            <div class="log_offer">
+                {% if entity.offer %}
+                    <b>{{ entity.offer.affiliate.name }}</b>,
+                    {{ entity.offer.payout }},
+                    <a href="{{ entity.offer.getPreviewUrl() }}">{{ entity.offer.name }}</a>
+                    {{ entity.offer.platform ? ', ('~ entity.offer.platform.name ~')' : '' }}
+                {% endif %}
+            </div>
+            <span class="log_datetime"><span class="log_time">{% if entity.created %}{{ entity.created|datetotext() }}{% endif %}</span></span>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    {% endblock %}

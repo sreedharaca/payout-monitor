@@ -1,0 +1,29 @@
+parameters:
+#    katana_hasoffers.example.class: Katana\HasoffersBundle\Example
+
+
+services:
+#    katana_hasoffers.example:
+#        class: %katana_hasoffers.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]
+
+    PlatformService:
+        class: Katana\OfferBundle\Service\PlatformService
+        arguments: ['@service_container']
+
+    AppService:
+        class: Katana\OfferBundle\Service\AppService
+        arguments: ['@service_container']
+
+    DateToTextService:
+        class: Katana\OfferBundle\Service\DateToTextService
+        arguments: ['@service_container']
+
+    twig.extension.datetotext:
+        class: Katana\OfferBundle\Twig\DateToTextExtension
+        arguments: ['@service_container']
+        tags:
+          - { name: twig.extension }
+
+#arguments:
+#          -  {type: service, id: service_container}

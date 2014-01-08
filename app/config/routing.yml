@@ -1,0 +1,32 @@
+katana_log:
+    resource: "@KatanaLogBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+katana_sync:
+    resource: "@KatanaSyncBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+katana_dictionary:
+    resource: "@KatanaDictionaryBundle/Resources/config/routing.yml"
+    prefix:   /
+
+katana_json_parser:
+    resource: "@KatanaJsonParserBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+katana_affiliate:
+    resource: "@KatanaAffiliateBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+katana_offer:
+    resource: "@KatanaOfferBundle/Controller/"
+    type: annotation
+    prefix: /
+
+_welcome:
+    pattern: /
+    defaults: { _controller: KatanaOfferBundle:Offer:index }

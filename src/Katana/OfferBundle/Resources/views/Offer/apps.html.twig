@@ -1,0 +1,20 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+<h5>Всего: {{ apps|length }} апп</h5>
+
+    <table class="table table-condensed" style="padding:3px;">
+        {% for app in apps %}
+        <tr>
+            <td >{{ app.externalId }}</td>
+            <td >{{ app.name }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}
+
+{% block inline_javascripts %}
+<script>
+</script>
+{% endblock %}

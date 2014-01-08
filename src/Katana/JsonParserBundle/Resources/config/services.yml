@@ -1,0 +1,6 @@
+parameters:
+
+services:
+    json_parser_manager:
+        class: Katana\JsonParserBundle\Service\JsonParserManager
+        arguments: ['@service_container'] # //

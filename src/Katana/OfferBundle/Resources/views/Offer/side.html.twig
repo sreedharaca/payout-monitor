@@ -1,0 +1,452 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+
+    <style type="text/css">
+        .hiddenRow {
+            padding: 0 !important;
+        }
+        td, th{
+            border: none;
+        }
+        body {
+            padding-top:50px;
+        }
+
+        .android-color{
+            background-color: #f2ffc7;
+        }
+
+        .stop-offer{
+            text-decoration: line-through;
+            color: red;
+        }
+
+        div.search-form-row
+        {
+            width: 300px;
+            float: left;
+            min-height: 80px;
+        }
+        div.form-actions{
+            clear: both;
+        }
+
+        .well{
+            /*margin: 5px;*/
+            padding: 5px;
+        }
+
+        .form-actions{
+            margin: auto 5px;
+            padding: 3px;
+        }
+
+        form{
+            margin: 0 0 0;
+        }
+
+        #iosLetters{
+            position: fixed;
+            top: 200px;
+            left: 0px;
+            /*width: 20px;*/
+            padding: 3px 1px 3px;
+            border: 1px solid grey;
+            background-color: #ffff99;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: auto 0;
+        }
+
+        #androidLetters{
+            position: fixed;
+            top: 200px;
+            right: 0px;
+            /*width: 20px;*/
+            padding: 3px 1px 3px;
+            border: 1px solid grey;
+            background-color: #ffff99;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: auto 0;
+        }
+
+        .letter{
+            padding-top: 50px;
+        }
+    </style>
+
+    {% include '::navbar.html.twig' %}
+
+    <div class="container-fluid">
+
+        <div class="well">
+
+            <form class="search-for" action="{{ path('filter_offers') }}" method="POST">
+
+                <div>
+                    {{ form_row(form.search) }}
+                </div>
+
+                <div class="search-form-row">
+                    {{ form_row(form.platform) }}
+                    {{ form_row(form.device) }}
+                </div>
+
+                <div class="search-form-row">
+                    {{ form_row(form.affiliate) }}
+                    {{ form_row(form.country) }}
+                </div>
+
+                <div>
+                    {{ form_row(form.incentive) }}
+                    {{ form_row(form.new) }}
+                </div>
+
+                <div class="form-actions">
+                    {#<i class="icon-search"></i>#}
+                    <button class="btn btn-success" type="submit">Искать</button>
+                    <button class="btn" type="button" onclick="window.location.href = '{{ path('offers') }}'">Сбросить</button>
+                </div>
+                {{ form_end(form) }}
+            </form>
+
+        </div>
+
+
+
+
+        {#======================#}
+    <table style="width: 100%">
+    <tr><td style="width: 50%; vertical-align: top;">
+
+
+        <div id="iosLetters">
+            {% for letter in iosLetters %}
+                <div><a href="#iosLetter{{ letter }}">{{ letter }}</a></div>
+            {% endfor %}
+            {#<div><a href="#">А</a></div>#}
+        </div>
+
+        <h3>iOS</h3>
+
+        <div class="panel-group" id="accordion">
+
+            {% set iosLetters = [] %}
+
+            {% for row in iosApps %}
+
+            {% set app = row['app'] %}
+            {% set bestOffer = row['bestOffer'] %}
+            {% set offerName = (app.name ? app.name : bestOffer.name) %}
+
+
+            {% set letter = offerName|slice(0,1)|upper %}
+            {% if letter not in iosLetters %}
+                <h2 id="iosLetter{{ letter }}" class="letter">{{ letter }}</h2>
+                {% set iosLetters = iosLetters|merge([letter]) %}
+            {% endif %}
+            <div class="panel panel-default">
+                <div class="panel-heading {{ (bestOffer.platform.name == 'Android')? 'android-color' : '' }}">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ app.id }}">
+                    <span data-toggle="collapse" data-parent="#accordion" data-target="#collapse{{ app.id }}">
+                        {#<h3 class="panel-title"  >#}
+
+                            <table class="table table-condensed" style="padding:3px;">
+                                <tr class="{{ not bestOffer.active ? 'stop-offer' : ''}}">
+                                    <td style="width: 40px; min-width: 30px;">
+                                        {% if app.getIconUrl %}
+                                            <img class="img-rounded" src="{{ app.getIconUrl }}"/>
+                                        {% endif %}
+                                    </td>
+                                    <td width="100px">{{ bestOffer.affiliate.name }}</td>
+                                    <td width="40%" style="{{ ((row['offers']|length) > 0) ? 'font-weight:bold;' : '' }}"><a href="{{ bestOffer.previewUrl|length ? bestOffer.previewUrl : '#'}}" target="_blank">{{ offerName }}.</a>
+                                        {% if row['offers']|length > 0 %}
+                                            <span class="badge badge-yellow pull-right" style="font-size: 0.7em;">+{{ row['offers']|length }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td width="60px">{{ bestOffer.payout }}
+                                    </td>
+                                    <td width="10%">{% for device in bestOffer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>
+                                    <td width="20%">
+                                        {% for country in bestOffer.getCountries|slice(0,3) %}<span class="label label-info" title="{{ country.name }}">{{ country.code }}</span> {% endfor %}
+                                        {% if bestOffer.getCountries|length > 3 %}
+                                            <a href="javascript:void(0);" class="label label-primary" rel="popover" data-trigger="click" data-html="1" data-placement="bottom" data-title="Все страны" data-content="{% for country in bestOffer.getCountries %}<span class='label label-info' title='{{ country.name }}'>{{ country.code }}</span> {% endfor %}">Все {{ bestOffer.getCountries|length  }}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td width="60px">{% if bestOffer.incentive %}<span class="label label-warning">I</span>{% endif %}</td>
+                                    <td width="40px">{% if bestOffer.new %}<span class="label label-success">N</span>{% endif %}</td>
+                                    <td width="40px">{% if not bestOffer.active %}<a class="btn btn-danger btn-mini delete-offer-button" data-offer-id="{{ bestOffer.id }}" href="javascript:void(0);">х</a>{% endif %}</td>
+                                </tr>
+                            </table>
+
+                            {#<span class="app-name"></span>#}
+                            {#<span class="app-name">{{ bestOffer.payout }}</span>#}
+                        {#</h3>#}
+                    </span>
+                        </a>
+                </div>
+                <div id="collapse{{ app.id }}" class="panel-collapse collapse out">
+                    <div class="panel-body">
+                        12312312312312312312313
+                        {#<table class="table table-condensed table-hover dataTable display appOffersTable">#}
+                            {#<thead>#}
+                            {#<tr>#}
+                                {#<th>Партнер</th>#}
+                                {#<th>Название</th>#}
+                                {#<th>Ставка</th>#}
+                                {#<th>Платформа</th>#}
+                                {#<th>Страна</th>#}
+                                {#<th>Incentive</th>#}
+                                {#<th>Новый</th>#}
+                            {#</tr>#}
+                            {#</thead>#}
+                            {#<tbody>#}
+                                {#{% for offer in row['offers'] %}#}
+                                {#<tr class="{{ not offer.active ? 'stop-offer' : ''}}">#}
+                                    {#<td>{{ offer.affiliate.name }}</td>#}
+                                    {#<td>{{ offer.name }}</td>#}
+                                    {#<td>{{ offer.payout }}</td>#}
+                                    {#<td>{% for device in offer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>#}
+                                    {#<td>{% for country in offer.getCountries %}<span class="label label-info">{{ country.code }}</span> {% endfor %}</td>#}
+                                    {#<td>{% if offer.incentive %}<span class="label label-warning">Incent</span>{% endif %}</td>#}
+                                    {#<td>{% if offer.new %}<span class="label label-success">new</span>{% endif %}</td>#}
+                                {#</tr>#}
+                                {#{% endfor %}#}
+                            {#</tbody>#}
+                        {#</table>#}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </td>
+    <td style="width: 50%; vertical-align: top;">
+
+        <div id="androidLetters">
+            {% for letter in androidLetters %}
+                <div><a href="#androidLetter{{ letter }}">{{ letter }}</a></div>
+            {% endfor %}
+            {#<div><a href="#">А</a></div>#}
+        </div>
+
+        <h3>Android</h3>
+
+        {% set androidLetters = [] %}
+
+        {% for row in androidApps %}
+
+            {% set app = row['app'] %}
+            {% set bestOffer = row['bestOffer'] %}
+            {% set offerName = (app.name ? app.name : bestOffer.name) %}
+
+
+            {% set letter = offerName|slice(0,1)|upper %}
+            {% if letter not in androidLetters %}
+                <h2 id="androidLetter{{ letter }}" class="letter">{{ letter }}</h2>
+                {% set androidLetters = androidLetters|merge([letter]) %}
+            {% endif %}
+
+            <div class="panel panel-default">
+                <div class="panel-heading {{ (bestOffer.platform.name == 'Android')? 'android-color' : '' }}">
+                    {#<a data-toggle="collapse" data-parent="#accordion" href="#collapse{{ app.id }}">#}
+                    <span data-toggle="collapse" data-parent="#accordion" data-target="#collapse{{ app.id }}">
+                        {#<h3 class="panel-title"  >#}
+
+                        <table class="table table-condensed" style="padding:3px;">
+                            <tr class="{{ not bestOffer.active ? 'stop-offer' : ''}}">
+                                <td style="width: 40px; min-width: 30px;">
+                                    {% if app.getIconUrl %}
+                                        <img class="img-rounded" src="{{ app.getIconUrl }}"/>
+                                    {% endif %}
+                                </td>
+                                <td width="100px">{{ bestOffer.affiliate.name }}</td>
+                                <td width="40%" style="{{ ((row['offers']|length) > 0) ? 'font-weight:bold;' : '' }}"><a href="{{ bestOffer.previewUrl|length ? bestOffer.previewUrl : '#'}}" target="_blank">{{ offerName }}.</a>
+                                    {% if row['offers']|length > 0 %}
+                                        <span class="badge badge-yellow pull-right" style="font-size: 0.7em;">+{{ row['offers']|length }}</span>
+                                    {% endif %}
+                                </td>
+                                <td width="60px">{{ bestOffer.payout }}
+                                </td>
+                                <td width="10%">{% for device in bestOffer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>
+                                <td width="20%">
+                                    {% for country in bestOffer.getCountries|slice(0,3) %}<span class="label label-info" title="{{ country.name }}">{{ country.code }}</span> {% endfor %}
+                                    {% if bestOffer.getCountries|length > 3 %}
+                                        <a href="javascript:void(0);" class="label label-primary" rel="popover" data-trigger="click" data-html="1" data-placement="bottom" data-title="Все страны" data-content="{% for country in bestOffer.getCountries %}<span class='label label-info' title='{{ country.name }}'>{{ country.code }}</span> {% endfor %}">Все {{ bestOffer.getCountries|length  }}</a>
+                                    {% endif %}
+                                </td>
+                                <td width="60px">{% if bestOffer.incentive %}<span class="label label-warning">I</span>{% endif %}</td>
+                                <td width="40px">{% if bestOffer.new %}<span class="label label-success">N</span>{% endif %}</td>
+                                <td width="40px">{% if not bestOffer.active %}<a class="btn btn-danger btn-mini delete-offer-button" data-offer-id="{{ bestOffer.id }}" href="javascript:void(0);">х</a>{% endif %}</td>
+                            </tr>
+                        </table>
+
+                        {#<span class="app-name"></span>#}
+                        {#<span class="app-name">{{ bestOffer.payout }}</span>#}
+                        {#</h3>#}
+                    </span>
+                </div>
+                <div id="collapse{{ app.id }}" class="panel-collapse collapse out">
+                    <div class="panel-body">
+                        {#<table class="table table-condensed table-hover dataTable display appOffersTable">#}
+                        {#<thead>#}
+                        {#<tr>#}
+                        {#<th>Партнер</th>#}
+                        {#<th>Название</th>#}
+                        {#<th>Ставка</th>#}
+                        {#<th>Платформа</th>#}
+                        {#<th>Страна</th>#}
+                        {#<th>Incentive</th>#}
+                        {#<th>Новый</th>#}
+                        {#</tr>#}
+                        {#</thead>#}
+                        {#<tbody>#}
+                        {#{% for offer in row['offers'] %}#}
+                        {#<tr class="{{ not offer.active ? 'stop-offer' : ''}}">#}
+                        {#<td>{{ offer.affiliate.name }}</td>#}
+                        {#<td>{{ offer.name }}</td>#}
+                        {#<td>{{ offer.payout }}</td>#}
+                        {#<td>{% for device in offer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>#}
+                        {#<td>{% for country in offer.getCountries %}<span class="label label-info">{{ country.code }}</span> {% endfor %}</td>#}
+                        {#<td>{% if offer.incentive %}<span class="label label-warning">Incent</span>{% endif %}</td>#}
+                        {#<td>{% if offer.new %}<span class="label label-success">new</span>{% endif %}</td>#}
+                        {#</tr>#}
+                        {#{% endfor %}#}
+                        {#</tbody>#}
+                        {#</table>#}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </td></tr>
+    </table>
+
+
+        {# Не сгруппированные офферы #}
+        {#<h3>Не сгруппированные офферы</h3>#}
+        {#<table id="offersTable" class="table table-condensed table-hover dataTable display">#}
+            {#<thead>#}
+            {#<tr>#}
+                {#<th>Название</th>#}
+                {#<th>Партнер</th>#}
+                {#<th>Ставка</th>#}
+                {#<th>Платформа</th>#}
+                {#<th>Страна</th>#}
+                {#<th>Incentive</th>#}
+                {#<th>Новый</th>#}
+            {#</tr>#}
+            {#</thead>#}
+            {#<tbody>#}
+            {#{% for offer in nonGroupedOffers %}#}
+            {#<tr class="{{ not offer.active ? 'stop-offer' : ''}}">#}
+                {#<td>>{{ offer.name }}</td>#}
+                {#<td>{{ offer.affiliate.name }}</td>#}
+                {#<td>{{ offer.payout }}</td>#}
+                {#<td>{% for device in offer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>#}
+                {#<td>{% for country in offer.getCountries %}<span class="label label-info">{{ country.code }}</span> {% endfor %}</td>#}
+                {#<td>{% if offer.incentive %}<span class="label label-warning">Incent</span>{% endif %}</td>#}
+                {#<td>{% if offer.new %}<span class="label label-success">new</span>{% endif %}</td>#}
+            {#</tr>#}
+            {#{% endfor %}#}
+            {#</tbody>#}
+        {#</table>#}
+
+
+    </div>
+
+{% endblock %}
+
+{% block inline_javascripts %}
+<script>
+
+    $(document).ready(function(){
+
+        /***
+         * Таблички офферов внутри каждой аппы
+         */
+//        $('.appOffersTable').dataTable({
+////            "bAutoWidth": false,
+//            "aaSorting": [[ 2, 'desc'], [6, 'desc'] ],
+////            "aaSortingFixed": [[ 0, 'asc' ]],
+//            "bPaginate": false,
+//            "bFilter": false,
+//            "bInfo": false,
+////            "aLengthMenu": [[50, 100, 200, -1], [50, 100, 200, "All"]],
+////            "iDisplayLength": 50,
+//            "aoColumnDefs": [
+//                { "bSortable": false , "aTargets": [ 3,4 ]},
+//                { "bSearchable": true, "bSortable": true , "aTargets": ['_all']}
+//            ]
+//        });
+
+
+        /** Общая табличка несгруппированных апп */
+//        $('#offersTable').dataTable({
+////            "bAutoWidth": false,
+//            "aaSorting": [[ 2, 'desc'], [6, 'desc'] ],
+////            "aaSortingFixed": [[ 0, 'asc' ]],
+//            //"bPaginate": false,
+//            "aLengthMenu": [[10, 50, 100, -1], [10, 50, 100, "All"]],
+//            "iDisplayLength": 10,
+//            "aoColumnDefs": [
+//                { "bSortable": false , "aTargets": [ 3,4 ]},
+//                { "bSearchable": true, "bSortable": true , "aTargets": ['_all']}
+//            ]
+//        });
+
+        /***
+         * init Affiliate (filter)
+         */
+        $('.chzn').chosen({allow_single_deselect: true});
+
+        /**
+         * Popover
+         */
+        $('[rel=popover]').popover();
+
+
+        $('form.search-form button[type=submit]').click(function(event){
+
+            event.defaultPrevented(); //preventDefault();
+
+            console.log('submit action');
+        });
+
+
+        /***
+         * Delete offer
+         */
+        $(".delete-offer-button").click(deleteOfferAction);
+
+        /***
+         * Init Letters Bar
+         */
+
+    });
+
+    function deleteOfferAction(event){
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        $(this).closest("tr").hide();
+
+        var id = $(this).data('offer-id');
+
+        deleteOffer(id);
+    }
+
+    function deleteOffer(id){
+
+        if (id != undefined){
+            $.ajax({
+                url: "{{ path('offer_delete') }}",
+                type: "POST",
+                data: {"id": id},
+                dataType: "json"
+            }).done(function(data){});
+        }
+    }
+</script>
+{% endblock %}

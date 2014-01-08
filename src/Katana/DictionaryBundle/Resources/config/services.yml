@@ -1,0 +1,7 @@
+parameters:
+#    katana_dictionary.example.class: Katana\DictionaryBundle\Example
+
+services:
+#    katana_dictionary.example:
+#        class: %katana_dictionary.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]

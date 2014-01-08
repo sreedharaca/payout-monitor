@@ -1,0 +1,20 @@
+{% verbatim %}
+<div class="container-fluid">
+    <table class="table table-condensed">
+        <tr class="" ng-repeat="offer in competitors">
+            <td style="width: 40px; min-width: 30px;">
+                <img class="img-rounded offer-icon" src=""/>
+            </td>
+            <td width="100px"></td>
+            <td width="40%"><a href="#" target="_blank">{{ offer.name }}</a></td>
+            <td width="60px"></td>
+            <td width="10%"><span class="label label-info"></span></td>
+            <td width="20%">
+                <span class="label label-info"></span>
+            </td>
+            <td width="60px"><span class="label label-warning">Inc</span></td>
+            <td width="40px"><span class="label label-success">new</span></td>
+        </tr>
+</table>
+</div>
+{% endverbatim %}

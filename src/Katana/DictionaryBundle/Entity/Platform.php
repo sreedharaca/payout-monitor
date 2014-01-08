@@ -1,0 +1,155 @@
+<?php
+
+namespace Katana\DictionaryBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * Platform
+ *
+ * @ORM\Table(name="platform", indexes={@ORM\Index(name="name_idx", columns={"name"})})
+ * @ORM\Entity(repositoryClass="Katana\DictionaryBundle\Entity\PlatformRepository")
+ */
+class Platform
+{
+    const IOS = 'iOS';
+    const ANDROID = 'Android';
+    const WEB = 'Web Games';
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", columnDefinition="enum('iOS', 'Android', 'Web Games')", options={"default":"iOS"})
+     */
+    private $name;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Device", mappedBy="platform")
+     */
+    private $devices;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Katana\OfferBundle\Entity\Offer", mappedBy="platform")
+     */
+    private $offers;
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     * @return Platform
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string 
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->devices = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    /**
+     * Add devices
+     *
+     * @param \Katana\DictionaryBundle\Entity\Device $devices
+     * @return Platform
+     */
+    public function addDevice(\Katana\DictionaryBundle\Entity\Device $devices)
+    {
+        $this->devices[] = $devices;
+    
+        return $this;
+    }
+
+    /**
+     * Remove devices
+     *
+     * @param \Katana\DictionaryBundle\Entity\Device $devices
+     */
+    public function removeDevice(\Katana\DictionaryBundle\Entity\Device $devices)
+    {
+        $this->devices->removeElement($devices);
+    }
+
+    /**
+     * Get devices
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getDevices()
+    {
+        return $this->devices;
+    }
+
+    /**
+     * Add offers
+     *
+     * @param \Katana\OfferBundle\Entity\Offer $offers
+     * @return Platform
+     */
+    public function addOffer(\Katana\OfferBundle\Entity\Offer $offers)
+    {
+        $this->offers[] = $offers;
+    
+        return $this;
+    }
+
+    /**
+     * Remove offers
+     *
+     * @param \Katana\OfferBundle\Entity\Offer $offers
+     */
+    public function removeOffer(\Katana\OfferBundle\Entity\Offer $offers)
+    {
+        $this->offers->removeElement($offers);
+    }
+
+    /**
+     * Get offers
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getOffers()
+    {
+        return $this->offers;
+    }
+}

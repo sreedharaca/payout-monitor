@@ -1,0 +1,24 @@
+parameters:
+#    katana_hasoffers.example.class: Katana\HasoffersBundle\Example
+
+
+services:
+#    katana_hasoffers.example:
+#        class: %katana_hasoffers.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]
+
+    offers_update:
+        class: Katana\SyncBundle\Service\OffersUpdate
+        arguments: ['@service_container']
+
+    Itunes:
+        class: Katana\SyncBundle\Service\Itunes
+        arguments: ['@service_container']
+
+    PlayGoogle:
+        class: Katana\SyncBundle\Service\PlayGoogle
+        arguments: ['@service_container']
+
+    CurlService:
+        class: Katana\SyncBundle\Service\CurlService
+        arguments: ['@service_container']

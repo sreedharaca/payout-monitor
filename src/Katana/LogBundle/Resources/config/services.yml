@@ -1,0 +1,11 @@
+services:
+
+    LogService:
+        class: Katana\LogBundle\Service\LogService
+        arguments:
+            entityManager: "@doctrine.orm.entity_manager"
+
+    CronLogService:
+        class: Katana\LogBundle\Service\CronLogService
+        arguments:
+            entityManager: "@doctrine.orm.entity_manager"
