@@ -1,21 +1,159 @@
 
 var OffersApp = angular.module('offersApp', []);
 
-OffersApp.directive('popOver', function ($compile, $http) {
+// Abstract resource
+//OffersApp.factory('OffersResource', function($resource){
+//
+//    var baseURL = offer_filter_url,
+//        baseParams = {
+//            callback: 'JSON_CALLBACK'
+//        },
+//        baseOptions = {
+//            query: {
+//                method: 'JSONP'
+//            }
+//        }
+//
+//    return function(endpoint, params, options){
+//        var url = baseURL + endpoint;
+//
+//        return $resource(url, params, options);
+//    };
+//
+//});
 
-//    var itemsTemplate = "<ul class='unstyled'><li ng-repeat='item in items'>{{item}}</li></ul>";
+
+//OffersApp.factory('OffersResource', function($resource){
+//
+//});
+
+
+//создает объект модели
+//который содерит в себе данные офферов
+//умеет делегировать объекту ресурса получение офферов с сервера
+
+OffersApp.factory('OffersData', function(){
+
+    var OffersData = {
+
+        offers: [],
+
+        androidOffers: [],
+
+//        relativeOffers: [],
+
+        find: function(id){
+
+            if(!id){
+                return null;
+            }
+
+            var retval = null;
+
+            $.each(this.offers, function(index, offersGroup){
+
+                if(retval !== null){ return ; }
+
+                $.each(offersGroup.offers, function(index, offer){
+
+//console.log('looping offers', offer);
+//console.log('condition equals:',offer.id,id);
+
+                    if(offer.id == id){
+
+                        retval = offer;
+                        return false;
+                    }
+                });
+            });
+
+            $.each(this.androidOffers, function(index, offersGroup){
+
+                if(retval !== null){ return ; }
+
+                $.each(offersGroup.offers, function(index, offer){
+
+//console.log('looping offers', offer);
+//console.log('condition equals:',offer.id,id);
+
+                    if(offer.id == id){
+
+                        retval = offer;
+                        return false;
+                    }
+                });
+
+            });
+
+            return retval;
+        }
+    };
+
+    return OffersData;
+});
+
+
+OffersApp.controller('FilterFormCtrl', ['$scope', '$http', 'OffersData', function ($scope, $http, OffersData) {
+
+    $scope.formData = {};
+
+
+    $scope.do = function() {
+
+//        console.log($scope.formData);
+
+        preloader = new ajaxLoader(document.body /*, {classOveride: 'blue-loader'}*/);
+        //посылаем запрос на сервер - передаем данные формы - получаем ответ с json данными
+        $http({
+            method  : 'POST',
+            url     : offer_filter_url,
+            data    : $.param($scope.formData),  // pass in data as strings
+            headers : { 'Content-Type': 'application/x-www-form-urlencoded' }  // set the headers so angular passing info as form data (not request payload)
+        })
+            .success(function(data) {
+//                console.log(data);
+
+                if (!data.success) {
+
+                    console.log('error');
+                    // if not successful, bind errors to error variables
+//                    $scope.errorName = data.errors.name;
+//                    $scope.errorSuperhero = data.errors.superheroAlias;
+                } else {
+
+                    // if successful, bind success message to message
+                    OffersData.offers = data.iosOffers;
+                    OffersData.androidOffers = data.androidOffers;
+                }
+
+                if(preloader){ preloader.remove(); }
+            });
+    }
+}]);
+
+
+
+OffersApp.controller('OffersCtrl', ['$scope', 'OffersData', function($scope, OffersData)
+{
+    $scope.OffersData = OffersData;
+
+    $scope.find = function(id){
+
+        if(!id){
+            return null;
+        }
+
+        return $scope.OffersData.find(id);
+    }
+}
+
+]);
+
+
+OffersApp.directive('popOver', function ($compile) {
 
     var getTemplate = function () {
-//        return itemsTemplate;
-//        $http.get('/angular/partials/competitors.html').then(function(response){
-//            if(response.status == 200){
-//                return response.data;
-//            }
-//        });
-
-        return false;
     }
-
 
     return {
         restrict: "A",
@@ -30,10 +168,10 @@ OffersApp.directive('popOver', function ($compile, $http) {
             var offer = scope.find(parseInt(attrs.offerId));
 
             if(offer !== null){
-                console.log('relative offers', offer.relative_offers);
+//                console.log('relative offers', offer.relative_offers);
             }
             else{
-                console.log('nothing found');
+//                console.log('nothing found');
                 return ;
             }
 
@@ -43,9 +181,9 @@ OffersApp.directive('popOver', function ($compile, $http) {
 //            var popOverContent;
 
 //            if (scope.competitors) {
-                var html = $('#popover-content').html();
+            var html = $('#popover-content').html();
 //
-                popOverContent = $compile(html)(scopeParam);
+            popOverContent = $compile(html)(scopeParam);
 //            }
             var options = {
                 content: popOverContent,
@@ -58,107 +196,9 @@ OffersApp.directive('popOver', function ($compile, $http) {
             $(element).popover(options);
         }
 //        scope: {
-            /*popoverOffers: '=',*/
+        /*popoverOffers: '=',*/
 //            title: '@'
 //            offerId: '@dataOfferId'
 //        }
     };
 });
-
-
-
-
-OffersApp.controller('OffersCtrl', ['$scope', '$http', function($scope, $http)
-{
-//function OffersCtrl($scope, $http) {
-
-    $scope.formData = {letters:{}};
-
-    $scope.do = function() {
-
-        console.log($scope.formData);
-
-        preloader = new ajaxLoader(document.body /*, {classOveride: 'blue-loader'}*/);
-        //посылаем запрос на сервер - передаем данные формы - получаем ответ с json данными
-        $http({
-            method  : 'POST',
-            url     : offer_filter_url,
-            data    : $.param($scope.formData),  // pass in data as strings
-            headers : { 'Content-Type': 'application/x-www-form-urlencoded' }  // set the headers so angular passing info as form data (not request payload)
-        })
-        .success(function(data) {
-            console.log(data);
-
-            if (!data.success) {
-
-                console.log('error');
-                // if not successful, bind errors to error variables
-//                    $scope.errorName = data.errors.name;
-//                    $scope.errorSuperhero = data.errors.superheroAlias;
-            } else {
-                // if successful, bind success message to message
-                $scope.offers = data.iosOffers;
-                $scope.androidOffers = data.androidOffers;
-
-                //bind row to
-            }
-
-            if(preloader){ preloader.remove(); }
-        });
-    }
-
-    $scope.offers = [];
-
-    $scope.androidOffers = [];
-
-
-    $scope.find = function(id){
-
-//console.log('try find by id: ', id)
-
-        if(!id){
-            return null;
-        }
-
-        var retval = null;
-
-        $.each($scope.offers, function(index, offersGroup){
-
-            if(retval !== null){ return ; }
-
-            $.each(offersGroup.offers, function(index, offer){
-
-//console.log('looping offers', offer);
-//console.log('condition equals:',offer.id,id)
-                if(offer.id == id){
-
-                    retval = offer;
-                    return false;
-                }
-            });
-        });
-
-        $.each($scope.androidOffers, function(index, offersGroup){
-
-            if(retval !== null){ return ; }
-
-            $.each(offersGroup.offers, function(index, offer){
-
-//console.log('looping offers', offer);
-
-//console.log('condition equals:',offer.id,id)
-                if(offer.id == id){
-
-                    retval = offer;
-                    return false;
-                }
-            });
-
-        });
-
-        return retval;
-    }
-
-}
-
-]);

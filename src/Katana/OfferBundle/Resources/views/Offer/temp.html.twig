@@ -29,15 +29,15 @@
 
     {% include '::navbar.html.twig' %}
 
-    to be refactored
+    now refactoring
 
-    <div ng-app="offersApp" ng-controller="OffersCtrl">
+    <div ng-app="offersApp">
 
     <div class="container-fluid">
 
         <div class="well">
 
-            <form class="form form-horizontal search-form" {#action="{{ path('filter_offers') }}"#} method="POST" ng-submit="do()" role="form">
+            <form class="form form-horizontal search-form" {#action="{{ path('filter_offers') }}"#} method="POST" role="form" ng-controller="FilterFormCtrl" ng-submit="do()">
 
                 <div class="search-form-row">
                     {{ form_row(form.search) }}
@@ -117,22 +117,22 @@
 
 
         <div class="">
-            <table id="offers-wrapper">
+            <table id="offers-wrapper" ng-controller="OffersCtrl">
                 <tr>
                     {#IOS Offers#}
                     <td class="ios-offers">
                         {% verbatim %}
                         <!--ALPHABAET LINKS-->
                         <div id="iosLetters">
-                            <div ng-repeat="data in offers">
-                                <a href="#iosLetter{{ data.letter }}">{{ data.letter }}</a>
+                            <div ng-repeat="data in OffersData.offers">
+                                <a ng-href="#iosLetter{{ data.letter }}">{{ data.letter }}</a>
                             </div>
                         </div>
 
                         <h4 style="text-align: center;">iOS</h4>
 
                         <table id="ios-offers-table" class="table table-condensed" style="padding:3px;">
-                            <tbody ng-repeat="data in offers">
+                            <tbody ng-repeat="data in OffersData.offers">
                                 <!--БУКВА-->
                                 <tr id="#iosLetter{{ data.letter }}">
                                     <td colspan="9" class="letter-anchor">{{ data.letter }}</td>
@@ -166,7 +166,7 @@
                         {% verbatim %}
                         <!--ALPHABAET LINKS-->
                         <div id="androidLetters">
-                            <div ng-repeat="data in androidOffers">
+                            <div ng-repeat="data in OffersData.androidOffers">
                                 <a href="#androidLetter{{ data.letter }}">{{ data.letter }}</a>
                             </div>
                         </div>
@@ -174,7 +174,7 @@
                         <h4 style="text-align: center;">Android</h4>
 
                         <table id="ios-offers-table" class="table table-condensed" style="padding:3px;">
-                            <tbody ng-repeat="data in androidOffers">
+                            <tbody ng-repeat="data in OffersData.androidOffers">
                                 <!--БУКВА-->
                                 <tr id="#androidLetter{{ data.letter }}">
                                     <td colspan="9" class="letter-anchor">{{ data.letter }}</td>
