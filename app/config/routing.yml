@@ -29,4 +29,4 @@ katana_offer:
 
 _welcome:
     pattern: /
-    defaults: { _controller: KatanaOfferBundle:Offer:index }
+    defaults: { _controller: KatanaOfferBundle:Offer:main }
