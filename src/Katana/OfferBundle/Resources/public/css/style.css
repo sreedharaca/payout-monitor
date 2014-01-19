@@ -1,5 +1,9 @@
 .ajax_loader {
-    background: url("/img/loader.gif") no-repeat center center transparent;width:100%;height:100%;
+    background: url("/img/loader.gif") no-repeat center center transparent;
+    width:100%;
+    height:100%;
+    z-index: 10;
+    position: fixed;
 }
 
 .hiddenRow {
@@ -25,11 +29,19 @@ div.search-form-row
 {
     max-width: 300px;
     float: left;
-    min-height: 80px;
+    min-height: 50px;
     margin-right: 20px;
 }
 div.form-actions{
     clear: both;
+    /*margin: auto auto;*/
+    padding: 3px;
+    display: inline-block;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 3px;
 }
 
 #offers-wrapper{
@@ -60,11 +72,6 @@ div.form-actions{
     padding: 5px;
 }
 
-.form-actions{
-    margin: auto 5px;
-    padding: 3px;
-}
-
 form{
     margin: 0 0 0;
 }
@@ -80,13 +87,8 @@ form{
     font-size: 1em;
     font-weight: bold;
     margin: auto 0;
-    line-height: 110%;
-}
-
-
-#iosLetters a:hover,
-#androidLetters a:hover{
-    font-size: 2em;
+    line-height: 100%;
+    opacity: 0.5;
 }
 
 #androidLetters{
@@ -101,11 +103,32 @@ form{
     font-weight: bold;
     margin: auto 0;
     text-align: right;
+    line-height: 100%;
+    opacity: 0.5;
 }
+
+#iosLetters:hover,
+#androidLetters:hover {
+    opacity: 1;
+}
+
+#iosLetters a:hover,
+#androidLetters a:hover{
+    font-size: 2em;
+}
+
 
 .letter-anchor{
     font-weight: bold;
     font-size: 1.2em;
+}
+
+.anchor{
+    padding-top: 50px;
+    margin-top: -50px;
+
+    display: block;
+    vertical-align: top;
 }
 
 .popover{
@@ -114,4 +137,40 @@ form{
 
 .clickable {
     cursor: pointer;
+}
+
+
+#apps_container {
+    position: absolute;
+
+    /*display: block;*/
+    width: 400px;
+    margin-left: -200px;
+    left: 50%;
+    /*margin: 0 auto;*/
+    /*margin-left: auto;*/
+    /*margin-right: auto;*/
+    /*left: 40%;*/
+    /*width: 100%;*/
+    border: 1px dotted #ccc;
+    -moz-border-radius: 3px;
+    z-index: 1;
+    background-color: #ffffff;
+    max-height: 50%;
+
+
+    overflow-y: auto;
+    opacity: 0.9;
+}
+
+#searchText {
+    width: 400px;
+    /*margin-left: 10px;*/
+    display: block;
+    margin : 0 auto;
+}
+
+.v-narrow {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }

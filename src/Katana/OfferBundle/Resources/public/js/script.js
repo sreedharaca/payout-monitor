@@ -40,7 +40,7 @@ OffersApp.factory('OffersData', function(){
 
         androidOffers: [],
 
-//        relativeOffers: [],
+        names: [], //{name: 'HUI'}, {name: 'pizda'}
 
         find: function(id){
 
@@ -97,6 +97,13 @@ OffersApp.controller('FilterFormCtrl', ['$scope', '$http', 'OffersData', functio
 
     $scope.formData = {};
 
+    $scope.searchTextFocus = false;
+
+    $scope.showSearchHint = false;
+
+//    $scope.OffersData = OffersData;
+
+    $scope.apps = OffersData.names;
 
     $scope.do = function() {
 
@@ -124,11 +131,19 @@ OffersApp.controller('FilterFormCtrl', ['$scope', '$http', 'OffersData', functio
                     // if successful, bind success message to message
                     OffersData.offers = data.iosOffers;
                     OffersData.androidOffers = data.androidOffers;
+                    $scope.apps = data.names;
                 }
 
                 if(preloader){ preloader.remove(); }
             });
     }
+
+//    $scope.clear = function(){
+//
+//        $scope.formData = {};
+//
+//    };
+
 }]);
 
 
@@ -145,6 +160,13 @@ OffersApp.controller('OffersCtrl', ['$scope', 'OffersData', function($scope, Off
 
         return $scope.OffersData.find(id);
     }
+
+//    $scope.scrollTo = function(letter){
+//
+//        $location.hash(letter);
+//
+//        $anchorScroll();
+//    }
 }
 
 ]);
@@ -200,5 +222,43 @@ OffersApp.directive('popOver', function ($compile) {
 //            title: '@'
 //            offerId: '@dataOfferId'
 //        }
+    };
+});
+
+
+
+OffersApp.directive('popOverCountries', function ($compile) {
+
+    var getTemplate = function () {
+    }
+
+    return {
+        restrict: "A",
+        transclude: true,
+        template: "<span ng-transclude></span>",
+
+        link: function (scope, element, attrs) {
+
+            var offer = scope.find(parseInt(attrs.offerId));
+
+            if(offer == null){
+                return ;
+            }
+
+            var scopeParam = scope.$new();
+            scopeParam.countries = offer.countries;
+
+            var html = $('#popover-countries').html();
+
+            popOverContent = $compile(html)(scopeParam);
+
+            var options = {
+                content: popOverContent,
+                placement: "bottom",
+                html: true,
+                trigger: 'hover'
+            };
+            $(element).popover(options);
+        }
     };
 });

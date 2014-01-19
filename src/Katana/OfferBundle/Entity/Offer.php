@@ -189,6 +189,23 @@ class Offer
         return $this->getName();
     }
 
+
+    public  function findName(){
+
+        $App = $this->getApp();
+
+        if(!empty($App)){
+
+            $name = $App->getName();
+
+            if($name){
+                return $name;
+            }
+        }
+
+        return $this->getName();
+    }
+
     /**
      * Get id
      *

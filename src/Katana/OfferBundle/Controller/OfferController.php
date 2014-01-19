@@ -2,6 +2,9 @@
 
 namespace Katana\OfferBundle\Controller;
 
+use Katana\OfferBundle\Lib\AppAlphabetRepository;
+use Katana\OfferBundle\Lib\LetterCategoriesGroup;
+use Katana\OfferBundle\Lib\LetterCategory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -10,7 +13,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Katana\OfferBundle\Form\OfferFilterType;
 use Katana\DictionaryBundle\Entity\Platform;
-
+use Katana\OfferBundle\Lib\OfferGroup;
+use Katana\OfferBundle\Lib\App;
+use Katana\OfferBundle\Lib\OfferData;
+use Katana\OfferBundle\Lib\FilterForm;
 
 /**
  * Offer Controller.
@@ -21,11 +27,11 @@ class OfferController extends Controller
 {
     /**
      *
-     * @Route("/1", name="offers_temp")
+     * @Route("/", name="offers")
      * @Method("GET")
-     * @Template("KatanaOfferBundle:Offer:temp.html.twig")
+     * @Template("KatanaOfferBundle:Offer:main.html.twig")
      */
-    public function tempAction()
+    public function mainAction()
     {
 
         return array(
@@ -36,7 +42,7 @@ class OfferController extends Controller
 
     /**
      *
-     * @Route("/", name="offers")
+     * @Route("/old", name="offers_old")
      * @Method("GET")
      * @Template("KatanaOfferBundle:Offer:index.html.twig")
      */
@@ -67,94 +73,6 @@ class OfferController extends Controller
         );
     }
 
-
-    /**
-     *
-     * @Route("/side", name="sidepanel")
-     * @Method("GET")
-     * @Template("KatanaOfferBundle:Offer:side.html.twig")
-     */
-    public function sidepanelAction()
-    {
-        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAllMobile();
-//        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAll();
-
-        list($apps, $nonGroupedOffers) = $this->groupOffers($all_offers);
-
-        /*** FIND BEST PAYOUT  */
-        foreach($apps as $id => $app){
-            $sortedOffers = $app['offers'] ;//$this->sortOffersByPayoutAndGeo($app['offers']);
-
-            $bestOffer = array_pop($sortedOffers);
-            $apps[$id]['bestOffer'] = $bestOffer;
-            $apps[$id]['offers'] = $sortedOffers;
-        }
-
-
-        $iosApps = array();
-        $androidApps = array();
-
-        /*** Разделить по платформам */
-        foreach($apps as $id => $app){
-
-            if($app['bestOffer']->getPlatform()->getName() == Platform::IOS){
-                $iosApps[$id] = $app;
-            }
-            elseif($app['bestOffer']->getPlatform()->getName() == Platform::ANDROID){
-                $androidApps[$id] = $app;
-            }
-        }
-
-        /*** SORT APPS */
-        $iosApps = $this->sortAppsByName($iosApps);
-        $androidApps = $this->sortAppsByName($androidApps);
-
-
-        /***
-         * Буквенный индекс IOS
-         */
-        $iosLetters = array();
-
-        foreach($iosApps as $app){
-            $offer = $app['bestOffer'];
-
-            $name = $offer->getApp()->getName()?:$offer->getName();
-
-            $letter = strtoupper(substr($name,0,1));
-
-            if(! in_array($letter, $iosLetters)){
-                $iosLetters[] = $letter;
-            }
-        }
-
-
-        /***
-         * Буквенный индекс ANDROID
-         */
-        $androidLetters = array();
-
-        foreach($androidApps as $app){
-            $offer = $app['bestOffer'];
-
-            $name = $offer->getApp()->getName()?:$offer->getName();
-
-            $letter = strtoupper(substr($name,0,1));
-
-            if(! in_array($letter, $androidLetters)){
-                $androidLetters[] = $letter;
-            }
-        }
-
-
-        return array(
-            'form' => $this->createForm(new OfferFilterType())->createView(),
-            'nonGroupedOffers' => $nonGroupedOffers,
-            'iosApps' => $iosApps,
-            'androidApps' => $androidApps,
-            'iosLetters' => $iosLetters,
-            'androidLetters' => $androidLetters
-        );
-    }
 
     /**
      *
@@ -349,133 +267,165 @@ class OfferController extends Controller
      * @Route("/ajax_filter", name="offer_ajax_filter")
      * @Method("POST")
      */
-    public function ajaxFilterAction(){
+    public function ajaxFilterAction(Request $request){
 
-        $offerItem = array(
-            'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-            'partner' =>  'Satana',
-            'name' =>  'Spartan Hyis',
-            'payout' =>  1.55,
-            'device' =>  'iPhone',
-            'countries' =>  array('US'),
-            'is_incentive' =>  true,
-            'is_new' =>  true
-        );
-
-        $iosOffers = array(
-            array(
-                'letter' => 'A',
-                'offers' => array(
-                    array(
-                        'id' => 1,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Katana',
-                        'name' =>  'Spartan Wars1',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem, $offerItem, $offerItem)
-                    ),
-                    array(
-                        'id' => 2,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Katana',
-                        'name' =>  'Spartan Wars1',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem, )
-                    )
-                )
-            ),
-            array(
-                'letter' => 'B',
-                'offers' => array(
-                    array(
-                        'id' => 3,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Satana',
-                        'name' =>  'Spartan Hyis',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem, $offerItem)
-                    )
-                )
-            ),
-        );
+        $filter = new FilterForm();
+        $filter->bind($request);
 
 
-        $androidOffers = array(
-            array(
-                'letter' => 'C',
-                'offers' => array(
-                    array(
-                        'id' => 4,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Katana',
-                        'name' =>  'Spartan Wars1',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem, $offerItem)
-                    ),
-                    array(
-                        'id' => 5,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Katana',
-                        'name' =>  'Spartan Wars1',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem, $offerItem, $offerItem)
-                    )
-                )
-            ),
-            array(
-                'letter' => 'D',
-                'offers' => array(
-                    array(
-                        'id' => 6,
-                        'icon' =>  'http://a1008.phobos.apple.com/us/r30/Purple4/v4/6c/7d/9e/6c7d9e65-d9ff-2b1b-94f3-1434f0794423/Icon.png',
-                        'partner' =>  'Satana',
-                        'name' =>  'Spartan Hyis',
-                        'payout' =>  1.55,
-                        'device' =>  'iPhone',
-                        'countries' =>  array('US'),
-                        'is_incentive' =>  true,
-                        'is_new' =>  true,
-                        'relative_offers' => array($offerItem)
-                    )
-                )
-            ),
-        );
+        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByAjaxData($filter->getData());
+
+        $names = $this->getOffersNames($all_offers);
+
+        //разделить на платформы
+        $offersByPlatform = $this->splitByPlatform($all_offers);
+
+        $data = array();
+
+        foreach($offersByPlatform as $platform => $offers){
+
+            //сгруппировать офферы по App
+            //т.е. завернуть в OfferGroup
+            $offer_groups = $this->groupByApp($offers); // app_id => OfferGroup
+
+            //группы OfferGroup ---> App
+            //завернуть в App
+            $apps = array();
+
+            foreach($offer_groups as $app_id => $OfferGroup){
+
+                $apps[] = new App($OfferGroup);
+            }
+
+            //Apps ---> LetterCategory
+            //разобрать App'ы по буквенным категориям - LetterCategory
+            $AppRepo = new AppAlphabetRepository();
+
+            foreach($apps as $app){
+                $AppRepo->addApp($app);
+            }
+
+            $data[$platform] = $this->generateArrayData($AppRepo->sort());
+        }
 
 
         return new JsonResponse(
             array(
                 'success'       => true,
-                'iosOffers'     => $iosOffers,
-                'androidOffers' => $androidOffers
+                'iosOffers'     => $data['iosOffers'],
+                'androidOffers' => $data['androidOffers'],
+                'names'         => $names
             )
         );
     }
 
 
+    private function groupByApp($offers){
 
-    /**
-     * @Route("/edit/{id}", name="offer_delete")
-     * @Method("GET")
-     */
-//    public function editOffer()
+        $apps = array();
+
+        foreach($offers as $offer)
+        {
+            $App = $offer->getApp();
+
+            if( !empty( $App ) ){
+
+                $app_id = $App->getId();
+
+                if(!isset($apps[$app_id])) {
+                    $apps[$app_id] = new OfferGroup();
+                }
+
+                $apps[$app_id]->addOffer($offer);
+            }
+        }
+
+        return $apps;
+    }
+
+
+    private function generateArrayData(AppAlphabetRepository $AppRepo)
+    {
+        $letters = array();
+
+        foreach($AppRepo->getLetterCategories() as $LC){
+
+            $letter_offers = array();
+
+            foreach($LC->getApps() as $app)
+            {
+                //Main Offer
+                $OD = new OfferData($app->getMainOffer());
+                $offer_data = $OD->toArray();
+
+                //Relative Offers
+                $relative_offers_data = array();
+                foreach($app->getOfferGroup()->getOffers() as $offer){
+
+                    $OD = new OfferData($offer);
+                    $relative_offers_data[] = $OD->toArray();
+                }
+
+                $offer_data['relative_offers'] = $relative_offers_data;
+
+                $letter_offers[] = $offer_data;
+            }
+
+            $letter = $LC->getLetter();
+
+            $letters[] = array(
+                'letter' => $letter,
+                'offers' => $letter_offers
+            );
+
+        }
+
+        return $letters;
+    }
+
+
+    private function splitByPlatform($offers) {
+
+        $ios = array();
+        $android = array();
+
+        foreach($offers as $offer){
+
+            $Platform = $offer->getPlatform();
+
+            if(empty($Platform)){
+                continue;
+            }
+
+            if($offer->getPlatform()->getName() == Platform::IOS){
+                $ios[] = $offer;
+            }
+            else if($offer->getPlatform()->getName() == Platform::ANDROID){
+                $android[] = $offer;
+            }
+        }
+
+        return array('iosOffers'=>$ios, 'androidOffers'=>$android);
+    }
+
+
+    private function getOffersNames($offers){
+
+        $names = array();
+
+        foreach($offers as $offer){
+            $names[] = $offer->findName();
+        }
+
+        $names = array_unique($names, SORT_REGULAR);
+
+        $result = array();
+
+        foreach($names as $name){
+            $result[] = array('name' => $name);
+        }
+
+        return $result;
+    }
+
 }

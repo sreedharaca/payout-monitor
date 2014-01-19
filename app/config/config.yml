@@ -89,3 +89,6 @@ sensio_buzz:
 
 mopa_bootstrap:
     form: ~
+
+parameters:
+    mopa_bootstrap.form.render_optional_text: false

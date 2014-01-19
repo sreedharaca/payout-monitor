@@ -31,7 +31,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Страна',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('c')->add('orderBy', 'c.code ASC');},
-                'attr' => array('class' => "chzn"),
+                'attr' => array('class' => "chzn", 'ng-model'=>'formData.country' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -43,7 +43,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Платформа',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('p')->add('orderBy', 'p.id ASC');},
-                'attr' => array('class' => "chzn"),
+                'attr' => array('class' => "chzn", 'ng-model'=>'formData.platform' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -55,7 +55,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Девайс',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('d')->add('orderBy', 'd.name ASC');},
-                'attr' => array('class' => "chzn"),
+                'attr' => array('class' => "chzn", 'ng-model'=>'formData.device' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -74,13 +74,13 @@ class OfferFilterType  extends AbstractType{
                     //'attr'     => array('checked'   => 'checked'),
                     'required'  => false)
             )
-            ->add('search', 'text', array(
+//            ->add('search', 'text', array(
 //                    'value' => false,
-                    'attr' => array('placeholder'=>'Введите название', 'ng-model'=>'formData.search' /*, 'ng-change'=>'do()'*/),
-                    'label' => 'Поиск',
+//                    'attr' => array('placeholder'=>'Введите название', 'ng-model'=>'formData.search' /*, 'ng-change'=>'do()'*/),
+//                    'label' => 'Поиск',
                     //'attr'     => array('checked'   => 'checked'),
-                    'required'  => false)
-            )
+//                    'required'  => false)
+//            )
 
 //            ->add('building', 'entity', array(
 //                'multiple' => false,

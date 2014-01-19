@@ -259,4 +259,89 @@ class OfferRepository extends EntityRepository
 
         return $query->execute();
     }
+
+    public function getByAjaxData($data)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('offer, d, c, a, app')
+            ->leftJoin('offer.app', 'app')
+            ->leftJoin('offer.devices', 'd')
+            ->leftJoin('offer.countries', 'c')
+            ->leftJoin('offer.affiliate', 'a')
+        ;
+
+        /** Affiliate */
+        if( !empty($data['affiliate']) )
+        {
+            $qb
+//                ->join('offer.affiliate', 'affiliate')
+                ->andWhere('a.id = :affiliate')
+                ->setParameter('affiliate', $data['affiliate']);
+        }
+
+        /** Страна */
+        if( !empty($data['country']) && is_array($data['country']) && count($data['country'])>0 )
+        {
+            $country_ids = array();
+            foreach($data['country'] as $country){
+                $country_ids[] = $country;
+            }
+
+            $qb
+//                ->join('offer.countries', 'c')
+                ->andWhere('c.id IN (:country_ids)')
+                ->setParameter('country_ids', $country_ids);
+        }
+
+        /** Платформа */
+        if( !empty($data['platform']) && is_array($data['platform']) && count($data['platform'])>0 )
+        {
+            $platform_ids = array();
+            foreach($data['platform'] as $platform){
+                $platform_ids[] = $platform;
+            }
+            $qb
+                ->leftJoin('offer.platform', 'p')
+                ->andWhere('p.id IN (:platform_ids)')
+                ->setParameter('platform_ids', $platform_ids );
+        }
+
+        /** Девайс */
+        if( !empty($data['device']) && is_array($data['device']) && count($data['device'])>0 )
+        {
+            $device_ids = array();
+            foreach($data['device'] as $device){
+                $device_ids[] = $device;
+            }
+            $qb
+//                ->join('offer.devices', 'd')
+                ->andWhere('d.id IN (:device_ids)')
+                ->setParameter('device_ids', $device_ids );
+        }
+
+        /** Incent */
+        if( !empty($data['incentive']))
+        {
+            $qb->andWhere('offer.incentive = :incentive')
+                ->setParameter('incentive', $data['incentive']);
+        }
+
+        /** New */
+        if( !empty($data['new']))
+        {
+            $qb->andWhere('offer.new = :new')
+                ->setParameter('new', $data['new']);
+        }
+
+        /** Search */
+        if( !empty($data['search']))
+        {
+            $qb->andWhere('lower(offer.name) LIKE :search OR lower(app.name) LIKE :search')
+                ->setParameter('search', strtolower('%' . $data['search'] . '%'));
+        }
+
+//        echo $qb->getQuery()->getSQL();
+
+        return $qb->getQuery()->execute();
+    }
 }

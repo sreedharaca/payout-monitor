@@ -1,5 +1,13 @@
 {% extends '::base.html.twig' %}
 
+{% block stylesheets %}
+    {{ parent() }}
+
+    {% stylesheets '@KatanaOfferBundle/Resources/public/css/style.css'%}
+    <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+{% endblock %}
+
 
 {% block javascripts %}
     {{ parent() }}
@@ -16,15 +24,6 @@
 {% endblock %}
 
 
-{% block stylesheets %}
-    {{ parent() }}
-
-    {% stylesheets '@KatanaOfferBundle/Resources/public/css/style.css'%}
-        <link rel="stylesheet" href="{{ asset_url }}" />
-    {% endstylesheets %}
-{% endblock %}
-
-
 {% block body -%}
 
     {% include '::navbar.html.twig' %}
@@ -35,32 +34,55 @@
 
         <div class="well">
 
-            <form class="form form-horizontal search-form" {#action="{{ path('filter_offers') }}"#} method="POST" role="form" ng-controller="FilterFormCtrl" ng-submit="do()">
+            <form class="form form-horizontal search-form" {#action="{{ path('filter_offers') }}"#} method="POST" role="form"
+                ng-controller="FilterFormCtrl" ng-submit="do()">
 
-                <div class="search-form-row">
-                    {{ form_row(form.search) }}
-                    {{ form_row(form.affiliate) }}
+                <div class="form-group">
+                    {#{% verbatim %}{{ showSearchHint }}{% endverbatim %}#}
+                    <input type="text" id="searchText" name="search" class="form-control" placeholder="Введите название аппы" autocomplete="off"
+                           ng-model="formData.searchText" ng-focus="searchTextFocus = true" ng-blur="searchTextFocus = false">
+
+
+                    <div id="apps_container" ng-mouseover="showSearchHint = true" ng-mouseout="showSearchHint = false" ng-show="(searchTextFocus || showSearchHint) && apps.length">
+                        <ul style="padding: 3px 12px;">
+                            {#float:left; padding:3px;#}
+                            {% verbatim %}
+                            <li style="list-style: none;" ng-repeat="app in apps | filter:formData.searchText">
+                                <span class="label label-info clickable" ng-click="formData.searchText = app.name">{{ app.name }}</span>
+                            </li>
+                            {% endverbatim %}
+                        </ul>
+                    </div>
+
                 </div>
 
-                <div class="search-form-row">
-                    {{ form_row(form.platform) }}
+
+                <hr class="v-narrow">
+
+                <div class="col-xs-4">
+                    {#{{ form_row(form.search) }}#}
+                    {{ form_row(form.affiliate) }}
                     {{ form_row(form.device) }}
                 </div>
 
-                <div class="search-form-row">
+                <div class="col-xs-4">
+                    {{ form_row(form.platform) }}
+                </div>
+
+                <div class="col-xs-4">
                     {{ form_row(form.country) }}
                 </div>
 
-                <div class="search-form-row">
+                <div class="col-xs-4">
                     {{ form_row(form.new) }}
                 </div>
 
-                <div class="search-form-row">
+                <div class="col-xs-4">
                     {{ form_row(form.incentive) }}
                 </div>
 
+
                 <div class="form-actions">
-                    {#<i class="icon-search"></i>#}
                     <button class="btn btn-success" type="submit">Искать</button>
                     <button class="btn" type="button" onclick="window.location.href = '{{ path('offers') }}'">Сбросить</button>
                 </div>
@@ -123,7 +145,7 @@
                         <!--ALPHABAET LINKS-->
                         <div id="iosLetters">
                             <div ng-repeat="data in OffersData.offers">
-                                <a ng-href="#iosLetter{{ data.letter }}">{{ data.letter }}</a>
+                                <a href="#iosLetter{{ data.letter}}">{{ data.letter }}</a>
                             </div>
                         </div>
 
@@ -132,7 +154,7 @@
                         <table id="ios-offers-table" class="table table-condensed" style="padding:3px;">
                             <tbody ng-repeat="data in OffersData.offers">
                                 <!--БУКВА-->
-                                <tr id="#iosLetter{{ data.letter }}">
+                                <tr id="iosLetter{{ data.letter }}" class="anchor">
                                     <td colspan="9" class="letter-anchor">{{ data.letter }}</td>
                                 </tr>
                                 <!--ОФФЕРЫ-->
@@ -140,19 +162,22 @@
                                     <td style="max-width:40px; max-height:40px;">
                                         <img class="img-rounded offer-icon" src="{{offer.icon}}"/>
                                     </td>
-                                    <td width="100px">{{ offer.partner }}</td>
-                                    <td width="40%"><a href="#" target="_blank">{{ offer.name }}</a>
-                                        <span pop-over data-offer-id="{{ offer.id }}" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
+                                    <td width="60px">{{ offer.partner }}</td>
+                                    <td width=""><a href="#" target="_blank">{{ offer.name }}</a>
+                                        <span pop-over data-offer-id="{{ offer.id }}" ng-show="offer.relative_offers.length > 0" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
                                             {{ offer.relative_offers.length ? '+' + offer.relative_offers.length : ''  }}
                                         </span>
                                     </td>
-                                    <td width="60px">1.55</td>
-                                    <td width="10%"><span class="label label-info">iPhone</span></td>
+                                    <td width="30px">{{ offer.payout }}</td>
+                                    <td width="30px"><span class="label label-info">{{ offer.device }}</span></td>
                                     <td width="20%">
-                                        <span class="label label-info">US</span>
+                                        <nobr>
+                                            <span class="label label-info" style="margin-right: 5px;" ng-repeat="country in offer.countries | limitTo:3">{{country}}</span>
+                                            <span pop-over-countries data-offer-id="{{ offer.id }}" class="badge badge-default" ng-if="offer.countries.length > 3">+</span>
+                                        </nobr>
                                     </td>
-                                    <td width="60px"><span class="label label-warning">Inc</span></td>
-                                    <td width="40px"><span class="label label-success">new</span></td>
+                                    <td width="30px"><span class="label label-warning" ng-if="offer.is_incentive">Inc</span></td>
+                                    <td width="30px"><span class="label label-success" ng-if="offer.is_new">new</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -174,27 +199,29 @@
                         <table id="ios-offers-table" class="table table-condensed" style="padding:3px;">
                             <tbody ng-repeat="data in OffersData.androidOffers">
                                 <!--БУКВА-->
-                                <tr id="#androidLetter{{ data.letter }}">
+                                <tr id="androidLetter{{ data.letter }}" class="anchor">
                                     <td colspan="9" class="letter-anchor">{{ data.letter }}</td>
                                 </tr>
                                 <!--ОФФЕРЫ-->
                                 <tr ng-repeat="offer in data.offers"  data-offer-id="{{ offer.id }}">
-                                    <td style="max-width:40px; max-height:40px;">
+                                    <!--td style="max-width:40px; max-height:40px;">
                                         <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
-                                    </td>
-                                    <td width="100px">Yeahmobi</td>
-                                    <td width="40%"><a href="#" target="_blank">{{ offer.name }}</a>
-                                        <span pop-over data-offer-id="{{ offer.id }}" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
+                                    </td-->
+                                    <td width="60px">{{ offer.partner }}</td>
+                                    <td width=""><a href="#" target="_blank">{{ offer.name }}</a>
+                                        <span pop-over data-offer-id="{{ offer.id }}" ng-show="offer.relative_offers.length > 0" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
                                             {{ offer.relative_offers.length ? '+' + offer.relative_offers.length : ''  }}
                                         </span>
                                     </td>
-                                    <td width="60px">1.55</td>
-                                    <td width="10%"><span class="label label-info">iPhone</span></td>
+                                    <td width="60px">{{ offer.payout }}</td>
                                     <td width="20%">
-                                        <span class="label label-info">US</span>
+                                        <nobr>
+                                            <span class="label label-info" style="margin-right: 5px;" ng-repeat="country in offer.countries | limitTo:3">{{country}}</span>
+                                            <span pop-over-countries data-offer-id="{{ offer.id }}" class="badge badge-default" ng-if="offer.countries.length > 3">+</span>
+                                        </nobr>
                                     </td>
-                                    <td width="60px"><span class="label label-warning">Inc</span></td>
-                                    <td width="40px"><span class="label label-success">new</span></td>
+                                    <td width="30px"><span class="label label-warning" ng-if="offer.is_incentive">Inc</span></td>
+                                    <td width="30px"><span class="label label-success" ng-if="offer.is_new">new</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -224,12 +251,22 @@
                     <td width="20%">
                         <span class="label label-info"></span>
                     </td>
-                    <td width="60px"><span class="label label-warning">Inc</span></td>
-                    <td width="40px"><span class="label label-success">new</span></td>
+                    <td width="60px"><span class="label label-warning" ng-if="offer.incentive">Inc</span></td>
+                    <td width="40px"><span class="label label-success" ng-if="offer.new">new</span></td>
                 </tr>
             </table>
         </div>
     </div>
+
+    <div id="popover-countries" style="display: none">
+        <div class="container-fluid" style="max-width: 50%;">
+            <nobr>
+                <span class="label label-info" style="margin-right: 3px;" ng-repeat="country in countries | limitTo:10">{{country}}</span>
+                <span ng-if="countries.length > 10">... <span class="label label-danger" style="margin-right: 3px;">{{countries.length}}</span></span>
+            </nobr>
+        </div>
+    </div>
+
     {% endverbatim %}
 {% endblock %}
 
