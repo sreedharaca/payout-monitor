@@ -58,6 +58,37 @@ class Affiliate
         return $this->getName();
     }
 
+    public function truncateJson()
+    {
+        $Json = $this->getAffiliateJson();
+
+        if(!empty($Json)){
+            $Json->setJson(null);
+        }
+
+        return $this;
+    }
+
+    public function setJson($json)
+    {
+        $AffJson = $this->getAffiliateJson();
+
+        if( !empty($AffJson) ){
+            $AffJson->setJson($json);
+        }
+
+        return $this;
+    }
+
+    public function createAffiliateJson()
+    {
+        $AffiliateJson = new AffiliateJson();
+
+        $this->setAffiliateJson($AffiliateJson);
+
+        return $AffiliateJson;
+    }
+
 
     /**
      * Get id
@@ -120,6 +151,8 @@ class Affiliate
     public function __construct()
     {
         $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
+
+        $this->affiliate_json = new AffiliateJson();
     }
     
     /**

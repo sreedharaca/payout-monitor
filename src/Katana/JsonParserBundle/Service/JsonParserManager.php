@@ -14,15 +14,15 @@ use Katana\JsonParserBundle\Parser\ComboappJsonParser;
 
 class JsonParserManager
 {
-    const PROVIDER_KATANA = 'Katana';
-    const PROVIDER_AD4GAME = 'Ad4game';
-    const PROVIDER_UNICUME = 'Unicume';
-    const PROVIDER_YEAHMOBI = 'Yeahmobi';
-    const PROVIDER_COMBOAPP = 'Comboapp';
+    const PROVIDER_ADSUP     = 'Adsup';
+    const PROVIDER_KATANA    = 'Katana';
+    const PROVIDER_AD4GAME   = 'Ad4game';
+    const PROVIDER_UNICUME   = 'Unicume';
+    const PROVIDER_YEAHMOBI  = 'Yeahmobi';
+    const PROVIDER_COMBOAPP  = 'Comboapp';
+    const PROVIDER_ICONPEAK  = 'Iconpeak';
     const PROVIDER_KISSMYADS = 'Kissmyads';
     const PROVIDER_TAPGERINE = 'Tapgerine';
-    const PROVIDER_ICONPEAK = 'Iconpeak';
-    const PROVIDER_ADSUP = 'Adsup';
 
     //TODO добавить все сетки
 

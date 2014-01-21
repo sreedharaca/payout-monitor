@@ -4,6 +4,8 @@ namespace Katana\OfferBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Katana\AffiliateBundle\Entity\Affiliate as Affiliate;
+use Katana\DictionaryBundle\Entity\Platform;
+
 
 /**
  * Offer
@@ -205,6 +207,49 @@ class Offer
 
         return $this->getName();
     }
+
+
+    public function betterThan(Offer $offer){
+
+        if($this->getPayout() > $offer->getPayout()){
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isIos()
+    {
+        $Platform = $this->getPlatform();
+
+        if(!is_object($Platform)){
+            return false;
+        }
+
+        if( $Platform->getName() == Platform::IOS ){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+    public function isAndroid()
+    {
+        $Platform = $this->getPlatform();
+
+        if(!is_object($Platform)){
+            return false;
+        }
+
+        if( $Platform->getName() == Platform::ANDROID ){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
 
     /**
      * Get id

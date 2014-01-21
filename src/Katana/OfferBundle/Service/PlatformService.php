@@ -29,7 +29,7 @@ class PlatformService {
 
             $Platform = $device->getPlatform();
 
-            if( !empty($Platform) && is_object($Platform) ){
+            if( !empty($Platform) && ($Platform instanceof Platform) ){
                 return $Platform;
             }
         }

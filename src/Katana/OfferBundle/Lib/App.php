@@ -18,6 +18,10 @@ class App {
 
     private $offerGroup;
 
+    /**
+     * Передаем в конструктор объект-массив офферов
+     * Вычисляем лучший оффер
+     */
     public function __construct(OfferGroup $offerGroup){
 
         $offers = $offerGroup->getOffers();
@@ -25,28 +29,16 @@ class App {
         if(!count($offers)){
 
             throw new \Exception('Нельзя передавать пустую группу OfferGroup в App');
-//            $this->main_offer = null;
-//            $this->offerGroup = new OfferGroup();
-//
-//            return;
         }
 
-        $best_offer_index = null;
-        foreach($offers as $index => $offer){
+        $bestOffer = $offerGroup->findBestOffer();
 
-            //assume first element - is best offer
-            if($best_offer_index === null){
-                $best_offer_index = $index;
-//                continue;
-            }
-
-            if($offers[$best_offer_index]->getPayout() < $offer->getPayout()){
-                $best_offer_index = $index;
-            }
+        if( !$bestOffer ){
+            throw new \Exception('Не удалось определить лучший оффер');
         }
 
         //разложить
-        $this->main_offer = $offers[$best_offer_index];
+        $this->main_offer = $bestOffer;
 
         $offerGroup->removeOffer($this->main_offer);
 

@@ -17,7 +17,8 @@ class OffersUpdate
 {
     private $container;
 
-    public function __construct(Container $container) {
+    public function __construct(Container $container)
+    {
         set_time_limit(0);
 
         $this->container = $container;
@@ -26,6 +27,8 @@ class OffersUpdate
     //TODO сделать обновление данных по шагам с логами
     //TODO чтобы ничего не ломалось, если что то сломалось пишем логи. Общий try catch
     /***
+     * Task: Загрузить json данные из api в базу
+     *
      * I
      */
     public function jsonApiToDb()
@@ -38,24 +41,13 @@ class OffersUpdate
 
         foreach($Affiliates as $Affiliate)
         {
-            // reset the EM and all aias
-            $container = $this->container;
-            $container->set('doctrine.orm.entity_manager', null);
-            $container->set('doctrine.orm.default_entity_manager', null);
-// get a fresh EM
-            $em = $this->container->get('doctrine')->getManager();
+            $Affiliate->truncateJson();
 
-//            $Affiliate->setAffiliateJson(null);
-            $AffiliateJsonOld = $Affiliate->getAffiliateJson();
-            if(!empty($AffiliateJsonOld)){
-                $AffiliateJsonOld->setJson(null);
-            }
-
-            $api = $Affiliate->getApiUrl();
+            $url = $Affiliate->getApiUrl();
 
             try {
                 /*** API request */
-                $json = $this->requestApi($api, $decode = false);
+                $json = $this->requestApi($url, $decode = false);
             }
             catch(\Exception $e){
                 echo $e->getMessage(); //"Произошла ошибка при запросе данных через API Партнера: {$Affiliate->getName()}\n";
@@ -71,19 +63,7 @@ class OffersUpdate
                 continue;
             }
 
-
-            $AffiliateJson = $Affiliate->getAffiliateJson();
-            if(!empty($AffiliateJson)){
-                $AffiliateJson->setJson($json);
-            }
-            else{
-                $AffiliateJsonNew = new AffiliateJson();
-                $AffiliateJsonNew->setJson($json);
-                $Affiliate->setAffiliateJson($AffiliateJsonNew);
-
-                $em->persist($AffiliateJsonNew);
-//                $em->persist($AffiliateJsonNew);
-            }
+            $Affiliate->setJson($json);
 
             $em->flush();
             $em->clear();
@@ -93,7 +73,6 @@ class OffersUpdate
             $CronLog->save('LOAD API JSON', "{$Affiliate->getName()}: got " . ((int)(strlen($json)/1024)) . " Kbytes \n");
         }
 
-        //Log->save('connect Api', 'success', 'recieved json Affiliate Name')
     }
 
     /***
@@ -352,6 +331,10 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
         $em->flush();
     }
 
+
+    public function
+
+
     /***
      * III
      */
@@ -476,8 +459,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 //      /*V*/  $this->updateAppsData();
 
 
-       $this->testLog();
-
 //        $this->parseIdFromPreviewUrl();
 
 //        $this->parsePreviewUrl();
@@ -500,22 +481,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 
     }
 
-
-    public function testLog(){
-
-        $Log = $this->container->get('LogService');
-
-        $Log->save(
-            $action = Log::ACTION_NEW,
-            $message = ''
-        );
-
-        $Log->save(
-            $action = Log::ACTION_PAYOUT_CHANGE,
-            $message = 'было: 0.30 стало 0.40'
-        );
-
-    }
 
 
     //    /***
@@ -549,71 +514,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 //    }
 
 
-
-//    /***
-//     * По
-//     */
-//    public function parseIdFromPreviewUrl()
-//    {
-//        $em = $this->container->get('Doctrine')->getManager();
-//
-//        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('app'=>null));
-//
-//        foreach($Offers as $Offer){
-//
-//            $Platform = $Offer->getPlatform();
-//            if(empty($Platform)){
-//                continue;
-//            }
-//
-//            if($Platform == Platform::IOS){
-//
-//                $ItunesService = $this->container->get('Itunes');
-//
-//                $id = $ItunesService->parseUrl($Offer->getPreviewUrl());
-//            }
-//            elseif($Platform == Platform::ANDROID){
-//                $PlayGoogleService = $this->container->get('PlayGoogle');
-//
-//                $id = $PlayGoogleService->parseUrl($Offer->getPreviewUrl());
-////echo "parsed Google ID: $id \n";
-//            }
-//            else{
-//                $id = false;
-//            }
-//
-//            if(empty($id)){
-//                continue;
-//            }
-//
-//            $App = $em->getRepository('KatanaOfferBundle:App')->findOneBy( array('external_id'=>$id) );
-//
-//            if(!empty($App) && is_object($App)){
-//
-////echo "found app in db. TIE with offer. app id = $id\n";
-//                //found: tie with offer
-//                $Offer->setApp($App);
-//            }
-//            else
-//            {
-////echo $id . "\n";
-//                //create App (tie with Offer)
-//                $App = new App();
-//
-//                $App->setExternalId($id);
-//                $App->addOffer($Offer);
-//
-//                $Offer->setApp($App);
-//
-//                $em->persist($App);
-//            }
-//
-//            $em->flush();
-//        }
-//    }
-
-
-
 //    private function resolvePlatformByPreviewUrl($url)
 //    {
 //        if( strpos($url, 'itunes.apple.com') !== false ){
@@ -630,6 +530,7 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 //            return false;
 //        }
 //    }
+
 
     public function startSyncProcess()
     {
@@ -654,8 +555,11 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 
 
     /**
-     * @param $api
-     * @return mixed
+     * Запросить данные из API по партнерской ссылке
+     *
+     * @param $api урл
+     * @param $decode вернеть json строку либо уже декодированную в array
+     * @return array || string
      */
     protected function requestApi($api, $decode = true)
     {
@@ -700,153 +604,5 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 //        set_time_limit(0);
         echo 'it works!';
     }
-
-//    protected function affiliate_store_offers($json)
-//    {
-//        $options = array('data', 'offers');
-//
-//        foreach ($options as $key) {
-//            $json = $json[$key];
-//        }
-//
-//        var_dump( $json );
-
-//        $em = $this->container->get('doctrine')->getManager();
-//
-//        foreach ($json as $offer) {
-//            echo "\"{$offer['name']}\"," . "\n";
-//
-//            create offer
-//            $Offer = new Offer();
-//            $Offer->setName($offer['name']);
-//            $Offer->setPayment(0.00);
-//
-//            $em->persist($Offer);
-//        }
-//
-//        $em->flush();
-//
-//    }
-
-
-
-//    private function getAppDataFromItunesById( $id )
-//    {
-//        if ( ! $id ) {
-//            return null;
-//        }
-//
-//        $tuCurl = curl_init();
-//        curl_setopt($tuCurl, CURLOPT_URL, "https://itunes.apple.com/lookup?id=$id");
-//        //curl_setopt($tuCurl, CURLOPT_PORT , 443);
-//        curl_setopt($tuCurl, CURLOPT_VERBOSE, 0);
-//        curl_setopt($tuCurl, CURLOPT_HEADER, 0);
-//        curl_setopt($tuCurl, CURLOPT_SSLVERSION, 3);
-//        curl_setopt($tuCurl, CURLOPT_POST, 0);
-//        curl_setopt($tuCurl, CURLOPT_SSL_VERIFYHOST, 0);
-//        curl_setopt($tuCurl, CURLOPT_SSL_VERIFYPEER, 0);
-//        curl_setopt($tuCurl, CURLOPT_RETURNTRANSFER, 1);
-//        //curl_setopt($tuCurl, CURLOPT_POSTFIELDS, $data);
-//
-//        $tuData = curl_exec($tuCurl);
-//
-//        if( curl_errno($tuCurl) ){
-//            return null;
-//        }
-//
-//        curl_close($tuCurl);
-//
-//        $result = json_decode( $tuData );
-//
-//        if( ! $result->resultCount ) {
-//            return null;
-//        }
-//
-//        $data = array();
-//
-//        $data['app_id']			= $id;
-//        $data['name'] 			= $result->results[0]->trackName;//['trackName'];
-//        $data['company'] 		= $result->results[0]->artistName;
-//        $data['iconUrl60'] 		= $result->results[0]->artworkUrl60;
-//        $data['rating'] 		= $result->results[0]->averageUserRating;
-//        $data['ratingCount'] 	= $result->results[0]->userRatingCount;
-//        $data['screenshotUrls'] = $result->results[0]->screenshotUrls;
-//        $data['description'] 	= $result->results[0]->description;
-//        $data['external_link']	= $result->results[0]->trackViewUrl;
-//
-//        return $data;
-
-//    }
-
-
-
-//    protected function sync_affiliate_katanaads()
-//    {
-//
-//        $api = 'http://cpa.katanaads.com/offers/offers.json?api_key=AFFtX40vixsn9GbnqCZtM6MWxwPhnZ';
-//
-//        $json = $this->affiliate_get_data($api);
-//
-//        $this->affiliate_store_offers($json);
-
-//        $this->container->get('doctrine')->getRepository('KatanaOfferBundle:App')->find(('app' => null));
-//        $rep = $this->container->get('doctrine')->getRepository('KatanaOfferBundle:Offer');
-//
-//        $qb = $rep->createQueryBuilder("o");
-//
-//        $qb
-//            ->where($qb->expr()->eq('o.app', ':app'))
-//            ->setParameter('app', null);
-//
-//        $res = $qb->getResults();
-//
-//        var_dump($res);
-
-
-    //$Offer->findAppExternalId()
-    //$Offer->findAppName()
-
-    //resolve app by offer
-    //offer = ios || android
-
-    // find App
-//            if (strpos($offer['preview_url'], 'itunes')) {
-//                if (preg_match('/.+id(\d+).*/', $offer['preview_url'], $matches)) {
-//                    //var_dump($matches[1]);
-//                    if (isset($matches[1])) {
-//                        $itunes_id = (int)$matches[1];
-//
-//                        $App = $this->container->get('doctrine')->getRepository('KatanaOfferBundle:App')->findOneBy(array('itunes_id' => $itunes_id));
-//                        if ($App instanceof App) {
-//                            $Offer->setApp($App);
-//                        } else {
-//                            $App = new App();
-//                            $App->setItunesId($itunes_id);
-//                            $App->setName("");
-//                            $App->setIcon("");
-//
-//                            //request to itunes API
-////                            $Itunes = $this->container->get('itunes');
-////                            $data = $Itunes->get($itunes_id);
-//
-//                            $data = $this->getAppDataFromItunesById($itunes_id);
-////                            var_dump($data);
-//
-//                            if ($data) {
-//                                $App->setName($data['name']);
-//                            }
-//
-//                            $Offer->setApp($App);
-//                        }
-//
-//                        $em->persist($App);
-//                    }
-//
-//                }
-//
-//            }
-//
-//            $em->flush();
-//    }
 
 }

@@ -56,46 +56,6 @@ class AppAlphabetRepository {
         return $this->letter_categories;
     }
 
-//    abstract public function generateArray()
-//    public function generateArrayData()
-//    {
-//        $letters = array();
-//
-//        foreach($this->letter_categories as $letter => $LC){
-//
-//            $letter_offers = array();
-//
-//            foreach($LC->getApps() as $app)
-//            {
-//                //Main Offer
-//                $OD = new OfferData($app->getMainOffer());
-//                $offer_data = $OD->toArray();
-//
-//                //Relative Offers
-//                $relative_offers_data = array();
-//                foreach($app->getOfferGroup()->getOffers() as $offer){
-//
-//                    $OD = new OfferData($offer);
-//                    $relative_offers_data[] = $OD->toArray();
-//                }
-//
-//                $offer_data['relative_offers'] = $relative_offers_data;
-//
-//                $letter_offers[] = $offer_data;
-//            }
-//
-//            $letter = $LC->getLetter();
-//
-//            $letters[] = array(
-//                'letter' => $letter,
-//                'offers' => $letter_offers
-//            );
-//
-//        }
-//
-//        return $letters;
-//    }
-
     public function sort(){
 
         ksort($this->letter_categories);

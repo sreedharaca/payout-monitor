@@ -267,18 +267,19 @@ class OfferController extends Controller
      * @Route("/ajax_filter", name="offer_ajax_filter")
      * @Method("POST")
      */
-    public function ajaxFilterAction(Request $request){
-
+    public function ajaxFilterAction(Request $request)
+    {
         $filter = new FilterForm();
         $filter->bind($request);
 
 
         $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByAjaxData($filter->getData());
 
-        $names = $this->getOffersNames($all_offers);
-
         //разделить на платформы
-        $offersByPlatform = $this->splitByPlatform($all_offers);
+        $offersByPlatform = array(
+            'iosOffers'     => $this->pickOutIos($all_offers),
+            'androidOffers' => $this->pickOutAndroid($all_offers)
+        );
 
         $data = array();
 
@@ -314,7 +315,7 @@ class OfferController extends Controller
                 'success'       => true,
                 'iosOffers'     => $data['iosOffers'],
                 'androidOffers' => $data['androidOffers'],
-                'names'         => $names
+                'names'         => $this->collectOffersNames($all_offers)
             )
         );
     }
@@ -358,15 +359,7 @@ class OfferController extends Controller
                 $OD = new OfferData($app->getMainOffer());
                 $offer_data = $OD->toArray();
 
-                //Relative Offers
-                $relative_offers_data = array();
-                foreach($app->getOfferGroup()->getOffers() as $offer){
-
-                    $OD = new OfferData($offer);
-                    $relative_offers_data[] = $OD->toArray();
-                }
-
-                $offer_data['relative_offers'] = $relative_offers_data;
+                $offer_data['relative_offers'] = $app->getOfferGroup()->toArray();
 
                 $letter_offers[] = $offer_data;
             }
@@ -384,33 +377,37 @@ class OfferController extends Controller
     }
 
 
-    private function splitByPlatform($offers) {
+    private function pickOutIos($offers){
 
         $ios = array();
+
+        foreach($offers as $offer){
+
+            if( $offer->isIos() ){
+                $ios[] = $offer;
+            }
+        }
+
+        return $ios;
+    }
+
+    private function pickOutAndroid($offers)
+    {
         $android = array();
 
         foreach($offers as $offer){
 
-            $Platform = $offer->getPlatform();
-
-            if(empty($Platform)){
-                continue;
-            }
-
-            if($offer->getPlatform()->getName() == Platform::IOS){
-                $ios[] = $offer;
-            }
-            else if($offer->getPlatform()->getName() == Platform::ANDROID){
+            if( $offer->isAndroid() ){
                 $android[] = $offer;
             }
         }
 
-        return array('iosOffers'=>$ios, 'androidOffers'=>$android);
+        return $android;
     }
 
 
-    private function getOffersNames($offers){
-
+    private function collectOffersNames($offers)
+    {
         $names = array();
 
         foreach($offers as $offer){

@@ -26,25 +26,50 @@ class OfferGroup {
         return $this->offers;
     }
 
-    public function removeOffer(Offer $offer){
+    public function removeOffer(Offer $offerToRemove)
+    {
+        foreach($this->offers as $index => $loopOffer){
 
-        $del_index = null;
-        foreach($this->offers as $index => $loop_offer){
+            if($offerToRemove->getId() == $loopOffer->getId()){
 
-            if($offer->getId() == $loop_offer->getId()){
+                unset($this->offers[$index]);
 
-                $del_index = $index;
+                return true;
             }
         }
 
-        if($del_index === null){
-
-            return false;
-        }
-
-        unset($this->offers[$del_index]);
-
-        return true;
+        return false;
     }
 
+    public function findBestOffer()
+    {
+        if(!count($this->offers)){
+            return null;
+        }
+
+        //assume first element - is best offer
+        $best_i = 0;
+
+        foreach($this->offers as $i => $offer){
+
+            if( $offer->betterThan($this->offers[$best_i]) ){
+                $best_i = $i;
+            }
+        }
+
+        return $this->offers[$best_i];
+    }
+
+    public function toArray()
+    {
+        $data = array();
+
+        foreach($this->offers as $offer)
+        {
+            $OfferData = new OfferData($offer);
+            $data[] = $OfferData->toArray();
+        }
+
+        return $data;
+    }
 } 

@@ -171,6 +171,8 @@ class OfferRepository extends EntityRepository
             ->leftJoin('offer.devices', 'd')
             ->leftJoin('offer.countries', 'c')
             ->where("offer.app is NULL")
+            ->andWhere("offer.deleted = 0")
+//            ->andWhere("offer.active = 1")
         ;
 
         return $qb->getQuery()->execute();
