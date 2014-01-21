@@ -332,9 +332,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
     }
 
 
-    public function
-
-
     /***
      * III
      */
