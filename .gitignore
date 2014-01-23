@@ -9,4 +9,6 @@
 /vendor/
 /bin/
 /composer.phar
-.idea
+/.idea/
+"!deploy.bat"
+/!deploy/*

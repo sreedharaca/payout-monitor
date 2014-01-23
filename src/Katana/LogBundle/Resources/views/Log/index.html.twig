@@ -1,45 +1,111 @@
 {% extends '::base.html.twig' %}
 
+{% block javascripts %}
+    {{ parent() }}
+
+    <script src="/js/angular.min.js"></script>
+    {#<script src="/js/angular-strap-master/dist/angular-strap.min.js"></script>#}
+    {#<script src="/js/angular-strap-master/dist/angular-strap.tpl.min.js"></script>#}
+
+    {% javascripts
+        '@KatanaLogBundle/Resources/public/js/script.js'
+        '@KatanaOfferBundle/Resources/public/js/ajax-loader.js'
+    %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+
+{% endblock %}
+
+
 {% block body -%}
 
     {% include '::navbar.html.twig' %}
 
     <style>
-        .log_item {
-            margin-bottom: 5px;
-            border-bottom: 1px dotted grey;
-        }
         .log_time{
             color: grey;
-            font-size: 0.9em;
+            font-size: 0.8em;
         }
-        .log_message {
-            font-style: italic;
+        .popover{
+            max-width: 50%;
         }
     </style>
 
-    <h3>Новости</h3>
+    <div ng-app="EventsApp">
 
-    <div class="well">
-        {% for entity in entities %}
-        <div class="log_item">
-            <div class="log_action">
-                <span class="label {{ actionToCss[entity.action] }}">{{ entity.action }}</span>
-                <span class="log_message">{{ entity.message }}</span>
-            </div>
+        <div class="well">
 
-            <div class="log_offer">
-                {% if entity.offer %}
-                    <b>{{ entity.offer.affiliate.name }}</b>,
-                    {{ entity.offer.payout }},
-                    <a href="{{ entity.offer.getPreviewUrl() }}">{{ entity.offer.name }}</a>
-                    {{ entity.offer.platform ? ', ('~ entity.offer.platform.name ~')' : '' }}
-                {% endif %}
-            </div>
-            <span class="log_datetime"><span class="log_time">{% if entity.created %}{{ entity.created|datetotext() }}{% endif %}</span></span>
+
+
+            <form class="form form-inline" ng-controller="FormCtrl">
+
+                <div class="checkbox">
+                    {% verbatim %}
+                    <label ng-repeat="type in formData.types">
+                        <input type="checkbox" ng-model="type.value" ng-true-value="1" ng-false-value="0" ng-change="submit()"> {{ type.name }}
+                    </label>
+                    {% endverbatim %}
+                </div>
+
+                <div class="form-group">
+                    {{ form_widget(form.country) }}
+                </div>
+
+            </form>
+
         </div>
-        {% endfor %}
+
+        <div class="well" ng-controller="EventCtrl">
+
+            {% verbatim %}
+            <table class="table table-condensed table-stripped">
+                <tr ng-repeat="event in storage.data">
+                    <td width="3%"><span class="label {{ event.typeCssClass }}">{{ event.type }}</span></td>
+                    <td width="40px">{{ event.offer.affiliate.name }}</td>
+                    <td>{{ event.offer.name }}</td>
+                    <td width="50px" title="{{ event.message }}">{{ event.offer.payout }}</td>
+                    <td width="100px">
+                        <nobr>
+                            <span class="label label-info" style="margin-right: 5px;" ng-repeat="country in event.offer.country | limitTo:3">{{country}}</span>
+                            <span pop-over-countries data-event-id="{{ event.id }}" class="badge badge-default" ng-if="event.offer.country.length > 3">+</span>
+                        </nobr>
+                    </td>
+                    <td width="100px">{{ event.offer.platform.name }}</td>
+                    <td width="120px"><nobr><span class="log_time pull-right">{{ event.time }}</span></nobr></td>
+                </tr>
+            </table>
+
+            <div style="text-align: center;">
+                <a class="btn btn-default" ng-click="showMore()" ng-show="getCurrentCount() < getTotal()">Еще</a>
+            </div>
+
+            {% endverbatim %}
+
+        </div>
+
+    </div>{#end ng-app#}
+
+    <div id="popover-countries" style="display: none">
+        <div class="container-fluid" style="max-width: 50%;">
+            <nobr>
+                {% verbatim %}
+                <span class="label label-info" style="margin-right: 3px;" ng-repeat="country in countries | limitTo:10">{{country}}</span>
+                <span ng-if="countries.length > 10">... <span class="label label-danger" style="margin-right: 3px;">{{countries.length}}</span></span>
+                {% endverbatim %}
+            </nobr>
+        </div>
     </div>
 
+{% endblock %}
 
-    {% endblock %}
+
+{% block inline_javascripts %}
+    <script>
+        var events_url = "{{ path('log_ajax_filter') }}";
+        var event_types = {{ eventTypes | json_encode() | raw }};
+
+        $(document).ready(function(){
+            $('.chzn').chosen({allow_single_deselect: true});
+        });
+    </script>
+{% endblock %}

@@ -3,6 +3,7 @@
 namespace Katana\LogBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 /**
  * LogRepository
@@ -13,17 +14,77 @@ use Doctrine\ORM\EntityRepository;
 class LogRepository extends EntityRepository
 {
 
-    public function findAllLogs(){
-
+    public function findAllLogs()
+    {
         $qb = $this->createQueryBuilder('l')
+            ->select('l, o, a, p')
+            ->join('l.offer', 'o')
+            ->join('o.affiliate', 'a')
+            ->leftJoin('o.platform', 'p')
             ->orderBy('l.created', 'DESC')
         ;
 
         $result = $qb->getQuery();
 
-        $result->getMaxResults(300);
+        return $result;
+    }
 
 
-        return $result->execute();
+    public function findLogsPaging($limitStart = 0, $limit = 10)
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->select('l, o, a, p')
+            ->join('l.offer', 'o')
+            ->join('o.affiliate', 'a')
+            ->leftJoin('o.platform', 'p')
+            ->orderBy('l.created', 'DESC')
+        ;
+
+        if($limitStart){
+            $qb->setFirstResult($limitStart);
+        }
+        if($limit){
+            $qb->setMaxResults($limit);
+        }
+
+        $paginator = new Paginator($qb->getQuery(), $fetchJoinCollection = true);
+
+        return $paginator;
+    }
+
+
+    public function findLogsByFilter($formData, $offset = 0, $limit = 100)
+    {
+        $qb = $this->createQueryBuilder('l')
+            ->select('l, o, a, p')
+            ->join('l.offer', 'o')
+            ->join('o.affiliate', 'a')
+            ->leftJoin('o.platform', 'p')
+            ->orderBy('l.created', 'DESC')
+        ;
+
+        if( isset($formData['type']) && is_array($formData['type']) && count($formData['type']) ){
+            $qb->andWhere('l.action IN (:type)');
+            $qb->setParameter('type', $formData['type']);
+        }
+
+        if( isset($formData['country']) && is_array($formData['country']) && count($formData['country'])){
+            $qb->join('o.countries', 'c');
+            $qb->addSelect('c');
+            $qb->andWhere('c.id IN (:country_ids)');
+            $qb->setParameter('country_ids', $formData['country']);
+        }
+
+
+        if($offset){
+            $qb->setFirstResult($offset);
+        }
+        if($limit){
+            $qb->setMaxResults($limit);
+        }
+
+        $paginator = new Paginator($qb->getQuery(), $fetchJoinCollection = true);
+
+        return $paginator;
     }
 }
