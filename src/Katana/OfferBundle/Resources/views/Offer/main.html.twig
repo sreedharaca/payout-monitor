@@ -234,7 +234,7 @@
 
     </div>
 
-    </div>{#end ng-controller#}
+    </div>{#end ng-app#}
 
     {% verbatim %}
     <div id="popover-content" style="display: none">
@@ -276,7 +276,7 @@
     var offer_filter_url = "{{ path('offer_ajax_filter') }}";
 
     $(document).ready(function(){
-        $('.chzn').chosen({allow_single_deselect: true});
+        $('.chosen').chosen({allow_single_deselect: true});
 
 
         $("#ios-offers-table tr").popover({

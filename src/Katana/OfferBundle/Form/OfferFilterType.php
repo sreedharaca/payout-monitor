@@ -2,6 +2,7 @@
 
 namespace Katana\OfferBundle\Form;
 
+use Katana\DictionaryBundle\Entity\Platform;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,7 +20,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Партнер',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('a')->add('orderBy', 'a.id ASC');},
-                'attr' => array('class' => "chzn", 'ng-model'=>'formData.affiliate' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.affiliate' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -31,7 +32,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Страна',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('c')->add('orderBy', 'c.code ASC');},
-                'attr' => array('class' => "chzn", 'ng-model'=>'formData.country' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.country' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -43,7 +44,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Платформа',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('p')->add('orderBy', 'p.id ASC');},
-                'attr' => array('class' => "chzn", 'ng-model'=>'formData.platform' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.platform' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -55,7 +56,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Девайс',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('d')->add('orderBy', 'd.name ASC');},
-                'attr' => array('class' => "chzn", 'ng-model'=>'formData.device' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.device' , 'ng-change'=>'do()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -89,7 +90,7 @@ class OfferFilterType  extends AbstractType{
 //                'label' => 'Корпус',
 //                'required' => false,
 //                'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('h')->where('h.active = 1')->andWhere('h.deleted = 0')->add('orderBy', 'h.name ASC');},
-//                'attr' => array('class' => "chzn-select"),
+//                'attr' => array('class' => "chosen-select"),
 //                'constraints' => array(
 //                    new Assert\Type(array('type' => 'object')),
 //                )
@@ -101,7 +102,7 @@ class OfferFilterType  extends AbstractType{
 //                'label' => 'Тип номера',
 //                'required' => false,
 //                'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('h')->where('h.active = 1')->andWhere('h.deleted = 0')->add('orderBy', 'h.name ASC');},
-//                'attr' => array('class' => "chzn-select"),
+//                'attr' => array('class' => "chosen-select"),
 //                'constraints' => array(
 //                    new Assert\Type(array('type' => 'object')),
 //                )
@@ -136,7 +137,7 @@ class OfferFilterType  extends AbstractType{
 //                'label' => 'Режим',
 //                'choices'   => array('simple' => 'Простой', 'freeRooms'=>'Свободные номера', 'pivot' => 'Сводный'),
 //                'required'  => true,
-//                'attr' => array('class' => "chzn-select"),
+//                'attr' => array('class' => "chosen-select"),
 //                'constraints' => array(
 //                    new Assert\NotBlank(),
 //                )

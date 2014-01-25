@@ -56,7 +56,9 @@ class OfferData {
             'device'        => $device_name,
             'countries'     => $countries,
             'is_incentive'  => $this->offer->getIncentive(),
-            'is_new'        => $this->offer->getNew()
+            'is_new'        => $this->offer->getNew(),
+            'platform'      => $this->offer->getPlatform()->getName(),
+            'platformIconUrl'=> $this->offer->getPlatform()->getIconUrl()
         );
 
         return $offerItem;

@@ -205,6 +205,36 @@ class OfferRepository extends EntityRepository
 //        return $qb->getQuery()->execute();
     }
 
+
+    /***
+     * Загрузка данных Itunes приложений
+     *
+     * для тех у которых платформа Ios, и app.name и app.iconUrl пустые
+     */
+    public function findByEmptyApps()
+    {
+        $qb = $this->createQueryBuilder('offer');
+
+        $qb->select('offer, app, p')
+
+            ->join('offer.app', 'app')
+            ->join('offer.platform', 'p')
+
+            ->where('p.name = :platform')
+            ->setParameter(':platform', Platform::IOS)
+
+            ->andWhere(
+                $qb->expr()->orX()
+                    ->add('app.name IS NULL')
+                    ->add("app.name = ''")
+                    ->add('app.icon_url IS NULL')
+                    ->add("app.icon_url = ''")
+            )
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
     /***
      * Найти конкурентов для данного оффера
      */

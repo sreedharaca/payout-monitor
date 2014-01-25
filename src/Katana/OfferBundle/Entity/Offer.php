@@ -58,7 +58,13 @@ class Offer
      */
     private $preview_url;
 
-    
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="final_url", type="string", length=255, nullable=true )
+     */
+    private $final_url;
+
     /**
      * @var datetime $created
      *
@@ -248,6 +254,25 @@ class Offer
         else{
             return false;
         }
+    }
+
+
+    public function isItunesPreviewUrl()
+    {
+        if( strpos($this->preview_url, 'itunes.apple.com') !== false ){
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isPlayGooglePreviewUrl()
+    {
+        if( strpos($this->preview_url, 'play.google.com') !== false ){
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -713,5 +738,28 @@ class Offer
     public function getLetter()
     {
         return $this->letter;
+    }
+
+    /**
+     * Set final_url
+     *
+     * @param string $finalUrl
+     * @return Offer
+     */
+    public function setFinalUrl($finalUrl)
+    {
+        $this->final_url = $finalUrl;
+    
+        return $this;
+    }
+
+    /**
+     * Get final_url
+     *
+     * @return string 
+     */
+    public function getFinalUrl()
+    {
+        return $this->final_url;
     }
 }

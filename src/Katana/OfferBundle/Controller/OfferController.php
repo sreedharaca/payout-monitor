@@ -425,4 +425,69 @@ class OfferController extends Controller
         return $result;
     }
 
+
+
+    /*********** WEB OFFERS **********************************************************************************/
+
+    /**
+     *
+     * @Route("/web", name="web_platform")
+     * @Method("GET")
+     * @Template("KatanaOfferBundle:Offer:web-platform.html.twig")
+     */
+    public function webPlatformAction()
+    {
+
+        $Platform = $this->getDoctrine()->getRepository("KatanaDictionaryBundle:Platform")->findByName(Platform::WEB);
+
+        $form = $this->createForm(new OfferFilterType());
+        $form->get('platform')->setData($Platform);
+
+        return array(
+            'form' => $form->createView(),
+            'web_games_id' => $Platform[0]->getId()
+        );
+    }
+
+    /**
+     * @Route("/web_ajax_filter", name="offer_web_ajax_filter")
+     * @Method("POST")
+     */
+    public function webAjaxFilterAction(Request $request)
+    {
+        $filter = new FilterForm();
+        $filter->bind($request);
+
+
+        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByAjaxData($filter->getData());
+
+        //сгруппировать офферы по App
+        //т.е. завернуть в OfferGroup
+        $offer_groups = $this->groupByApp($all_offers); // app_id => OfferGroup
+
+        //группы OfferGroup ---> App
+        //завернуть в App
+        $apps = array();
+
+        foreach($offer_groups as $OfferGroup){
+
+            $apps[] = new App($OfferGroup);
+        }
+
+        $AppRepo = new AppAlphabetRepository();
+
+        foreach($apps as $app){
+            $AppRepo->addApp($app);
+        }
+
+        $data = $this->generateArrayData($AppRepo->sort());
+
+        return new JsonResponse(
+            array(
+                'success'       => true,
+                'offers'        => $data,
+                'names'         => $this->collectOffersNames($all_offers)
+            )
+        );
+    }
 }

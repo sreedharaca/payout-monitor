@@ -21,7 +21,16 @@ class AppRepository extends EntityRepository
     }
 
 
-//    public function getAllIos(){
+    /***
+     * Загрузка данных Itunes приложений
+     *
+     * для тех у которых платформа Ios, и app.name и app.iconUrl пустые
+     */
+//    public function findEmpty(){
+//
+//        $qb = $this->createQueryBuilder('app')
+//            ->select('app')
+//            ->join('app.offers')
 //
 //    }
 }
