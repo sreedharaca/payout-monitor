@@ -10,5 +10,7 @@
 /bin/
 /composer.phar
 /.idea/
-"!deploy.bat"
-/!deploy/*
+deploy.bat
+/#deploy/*
+src.zip
+vendor.zip
