@@ -150,15 +150,18 @@
                     <td style="width: 40px; min-width: 30px;">
                         <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
                     </td>
-                    <td width="100px">{{offer.partner}}</td>
+                    <td width="50px">{{offer.partner}}</td>
                     <td width="40%"><a href="#" target="_blank">{{offer.name}}</a></td>
                     <td width="60px">{{ offer.payout }}</td>
-                    <td width="10%"><span class="label label-info"></span></td>
+                    <td width="3%"><span class="label label-info">{{ offer.device }}</span></td>
                     <td width="20%">
-                        <span class="label label-info"></span>
+                        <nobr>
+                            <span class="label label-info" style="margin-right: 5px;" ng-repeat="country in offer.countries | limitTo:3">{{country}}</span>
+                            <span ng-if="offer.countries.length > 3">... <span class="label label-danger" style="margin-right: 3px;">{{offer.countries.length}}</span></span>
+                        </nobr>
                     </td>
-                    <td width="60px"><span class="label label-warning" ng-if="offer.incentive">Inc</span></td>
-                    <td width="40px"><span class="label label-success" ng-if="offer.new">new</span></td>
+                    <td width="3%"><span class="label label-warning" ng-if="offer.incentive">Inc</span></td>
+                    <td width="3%"><span class="label label-success" ng-if="offer.new">new</span></td>
                 </tr>
             </table>
         </div>

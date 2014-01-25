@@ -60,7 +60,6 @@
                 <hr class="v-narrow">
 
                 <div class="col-xs-4">
-                    {#{{ form_row(form.search) }}#}
                     {{ form_row(form.affiliate) }}
                     {{ form_row(form.device) }}
                 </div>
@@ -87,53 +86,12 @@
                     <button class="btn" type="button" onclick="window.location.href = '{{ path('offers') }}'">Сбросить</button>
                 </div>
 
-
-                {#<div class="btn-group btn-group-xs" data-toggle="buttons">#}
-                    {#<label class="btn btn-primary">#}
-                        {#<input type="checkbox" name="filter_form_letter_a" ng-model="formData.letter" ng-change="do()"/> A#}
-                    {#</label>#}
-                    {#<label class="btn btn-primary">#}
-                        {#<input type="checkbox" ng-model="formData.letters "/> B#}
-                    {#</label>#}
-                    {#<label class="btn btn-primary">#}
-                        {#<input type="checkbox" /> C#}
-                    {#</label>#}
-                {#</div>#}
-
-
                 {{ form_end(form) }}
             </form>
 
 
 
         </div>
-
-        {#{% verbatim %}#}
-        {#<a href="#" pop-over popoverOffers="popoverOffers", title="Competitors">Show Pop over</a>#}
-        {#{% endverbatim %}#}
-
-
-        {#<!-- Markup for a default tooltip with a scope passed as an object {title:''} -->#}
-        {#<p>Tight pants next level keffiyeh <a href="" data-animation="animation-flipX" bs-tooltip="tooltip">you probably</a> haven't heard of them. Photo booth beard raw denim letterpress vegan messenger bag stumptown.</p>#}
-
-        {#<div class="input-group col-xs-5">#}
-  {#<span class="input-group-btn">#}
-    {#<!-- You can also use data-attrs to assign scope variables -->#}
-    {#<button class="btn btn-primary" type="button" data-trigger="click" data-type="success" title="{{tooltip.title}}" bs-tooltip="tooltip">Click me</button>#}
-  {#</span>#}
-            {#<input type="text" class="form-control" data-placement="right" data-type="info" data-container="body" placeholder="Focus to toggle tooltip" data-trigger="focus" bs-tooltip="tooltip">#}
-        {#</div>#}
-        {#<div class="checkbox">#}
-            {#<label data-placement="bottom" data-animation="animation-fadeAndScale" data-type="info" bs-tooltip="tooltip">#}
-                {#<input type="checkbox" ng-model="tooltip.checked"> Remember me#}
-            {#</label>#}
-        {#</div>#}
-
-        {#<!-- Button to trigger a default popover with a scope as an object {title:'', content:'', etc.} -->#}
-        {#<button type="button" class="btn btn-lg btn-primary" data-placement="bottom" data-animation="animation-flipX" bs-popover="popover">Click to toggle popover#}
-            {#<br>#}
-            {#<small>(using an object)</small>#}
-        {#</button>#}
 
 
         <div class="">
@@ -244,15 +202,18 @@
                     <td style="width: 40px; min-width: 30px;">
                         <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
                     </td>
-                    <td width="100px">{{offer.partner}}</td>
+                    <td width="50px">{{offer.partner}}</td>
                     <td width="40%"><a href="#" target="_blank">{{offer.name}}</a></td>
                     <td width="60px">{{ offer.payout }}</td>
-                    <td width="10%"><span class="label label-info"></span></td>
+                    <td width="3%"><span class="label label-info">{{ offer.device }}</span></td>
                     <td width="20%">
-                        <span class="label label-info"></span>
+                        <nobr>
+                            <span class="label label-info" style="margin-right: 5px;" ng-repeat="country in offer.countries | limitTo:3">{{country}}</span>
+                            <span ng-if="offer.countries.length > 3">... <span class="label label-danger" style="margin-right: 3px;">{{offer.countries.length}}</span></span>
+                        </nobr>
                     </td>
-                    <td width="60px"><span class="label label-warning" ng-if="offer.incentive">Inc</span></td>
-                    <td width="40px"><span class="label label-success" ng-if="offer.new">new</span></td>
+                    <td width="3%"><span class="label label-warning" ng-if="offer.incentive">Inc</span></td>
+                    <td width="3%"><span class="label label-success" ng-if="offer.new">new</span></td>
                 </tr>
             </table>
         </div>
