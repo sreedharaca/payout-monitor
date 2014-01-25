@@ -27,15 +27,24 @@ class AppService {
 
             $ItunesService = $this->container->get('Itunes');
 
-            $id = $ItunesService->parseUrl($Offer->getPreviewUrl());
+            return $id = $ItunesService->parseUrl($Offer->getFinalUrl());
 
         }
         elseif($Platform == Platform::ANDROID){
 
             $PlayGoogleService = $this->container->get('PlayGoogle');
 
-            $id = $PlayGoogleService->parseUrl($Offer->getPreviewUrl());
+            return $id = $PlayGoogleService->parseUrl($Offer->getFinalUrl());
 
+        }
+        elseif($Platform == Platform::WEB){
+
+            $parts = parse_url($Offer->getFinalUrl());
+
+            if(  isset($parts['host'])  &&  strlen($parts['host'])  ){
+
+                return $id = $parts['host'];
+            }
         }
         else{
             $id = false;

@@ -8,15 +8,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class OffersUpdateCommand extends ContainerAwareCommand
+class resolveFinalUrlCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
         parent::configure();
 
         $this
-            ->setName('offers:update')
-            ->setDescription('offers update')
+            ->setName('offers:finalurl')
+            ->setDescription("offers resolves offers' final url")
             /*->addArgument(
                 'name',
                 InputArgument::OPTIONAL,
@@ -34,7 +34,7 @@ class OffersUpdateCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $UO = $this->getContainer()->get('offers_update');
-        $UO->run();
+        $UO->resolveFinalUrlTask();
 
         //$output->writeln('run command update');
     }

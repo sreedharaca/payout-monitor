@@ -17,7 +17,6 @@ class Itunes
 
     //TODO не распознаются Уникум офферы
     //TODO показать список previewl_url для нераспознанных офферов
-    //TODO обработка офферов с редиректами
 
     public function get($id)
     {
@@ -47,22 +46,29 @@ class Itunes
 
         $result = json_decode( $tuData, true );
 
-//        var_dump($result);exit;
+//        var_dump($result);
 
         if( ! $result['resultCount'] ) {
             return null;
         }
 
+        if(!isset($result['results'][0]) || !is_array($result['results'][0])){
+            return null;
+        }
+
+        $app = $result['results'][0];
+
         $data = array();
 
         $data['id'] 			= $id;
-        $data['name'] 			= $result['results'][0]['trackName'];
+        $data['name'] 			= (isset($app['trackName'])?$app['trackName']:'');
+        $data['iconUrl60'] 		= (isset($app['artworkUrl60'])?$app['artworkUrl60']:'');
+
+//        $data['description'] 	= (isset($result['results'][0]['description'])?:'');
 //        $data['company'] 		= $result['results'][0]['artistName'];
-        $data['iconUrl60'] 		= (isset($result['results'][0]['artworkUrl60'])?:'');
 //        $data['rating'] 		= $result['results'][0]['averageUserRating'];
 //        $data['ratingCount'] 	= $result['results'][0]['userRatingCount'];
 //        $data['screenshotUrls'] = $result['results'][0]['screenshotUrls'];
-        $data['description'] 	= (isset($result['results'][0]['description'])?:'');
 //        $data['external_link']	= $result['results'][0]['trackViewUrl'];
 
         return $data;
@@ -79,20 +85,20 @@ class Itunes
         }
 
         //если ссылка не айтюнсовая,
-        if(strpos($url, 'itunes.apple.com') === false){
-            //то делаем запрос на отлов редиректа и конечной ссылки
-            try {
-                $url = $this->container->get('CurlService')->catchRedirectUrl($url);
-            }
-            catch(\Exception $e){
-                echo "Error while this->catchRedirectUrl($url): {$e->getMessage()}\n";
-                return false;
-            }
-
-            if($url === false){
-                return false;
-            }
-        }
+//        if(strpos($url, 'itunes.apple.com') === false){
+//            //то делаем запрос на отлов редиректа и конечной ссылки
+//            try {
+//                $url = $this->container->get('CurlService')->catchRedirectUrl($url);
+//            }
+//            catch(\Exception $e){
+//                echo "Error while this->catchRedirectUrl($url): {$e->getMessage()}\n";
+//                return false;
+//            }
+//
+//            if($url === false){
+//                return false;
+//            }
+//        }
 
         preg_match('/.*id[=]?(([\d]){9}).*/', $url, $match); //.*itunes
 

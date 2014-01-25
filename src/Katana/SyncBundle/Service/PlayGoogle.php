@@ -33,22 +33,22 @@ class PlayGoogle
         }
 
         //если ссылка не google,
-        if(strpos($url, 'play.google.com') === false){
-
-            //Получить финальную ссылку
-            try {
-                $url = $this->container->get('CurlService')->catchRedirectUrl($url);
-            }
-            catch(\Exception $e){
-                echo "Error while this->catchRedirectUrl($url): {$e->getMessage()}\n";
-                return false;
-            }
-
-            //Проверим результат получения финальную ссылку
-            if($url === false){
-                return false;
-            }
-        }
+//        if(strpos($url, 'play.google.com') === false){
+//
+//            //Получить финальную ссылку
+//            try {
+//                $url = $this->container->get('CurlService')->catchRedirectUrl($url);
+//            }
+//            catch(\Exception $e){
+//                echo "Error while this->catchRedirectUrl($url): {$e->getMessage()}\n";
+//                return false;
+//            }
+//
+//            //Проверим результат получения финальную ссылку
+//            if($url === false){
+//                return false;
+//            }
+//        }
 
         $query_string = parse_url($url, PHP_URL_QUERY );
         parse_str($query_string, $params);

@@ -18,7 +18,7 @@ class PlatformService {
     public function guessByOffer(Offer $Offer)
     {
         /** try by preview url */
-        $Platform = $this->guessByPreviewUrl($Offer->getPreviewUrl());
+        $Platform = $this->guessByUrl($Offer->getFinalUrl());
 
         if(!empty($Platform)) {
             return $Platform;
@@ -37,24 +37,18 @@ class PlatformService {
         return false;
     }
 
-    public function guessByPreviewUrl($url){
+    public function guessByUrl($url){
+
+        $em = $this->container->get('doctrine')->getManager();
 
         if( strpos($url, 'itunes.apple.com') !== false ){
-
-            $em = $this->container->get('doctrine')->getManager();
-            $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::IOS));
-
-            return $Platform;
+            return $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::IOS));
         }
         elseif( strpos($url, 'play.google.com') !== false ){
-
-            $em = $this->container->get('doctrine')->getManager();
-            $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::ANDROID));
-
-            return $Platform;
+            return $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::ANDROID));
         }
         else{
-            return false;
+            return $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::WEB));;
         }
     }
 
@@ -63,7 +57,7 @@ class PlatformService {
         $rules = array(
             Platform::IOS       => array('iphone', 'ipad', 'ios'),
             Platform::ANDROID   => array('android'),
-            Platform::WEB       => array('web')
+            Platform::WEB       => array('web', 'display')
         );
 
         foreach($rules as $platform => $words){

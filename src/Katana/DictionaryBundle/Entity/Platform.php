@@ -33,6 +33,13 @@ class Platform
     private $name;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="icon_url", type="string", length=255)
+     */
+    private $icon_url;
+
+    /**
      * @ORM\OneToMany(targetEntity="Device", mappedBy="platform")
      */
     private $devices;
@@ -151,5 +158,28 @@ class Platform
     public function getOffers()
     {
         return $this->offers;
+    }
+
+    /**
+     * Set icon_url
+     *
+     * @param string $iconUrl
+     * @return Platform
+     */
+    public function setIconUrl($iconUrl)
+    {
+        $this->icon_url = $iconUrl;
+    
+        return $this;
+    }
+
+    /**
+     * Get icon_url
+     *
+     * @return string 
+     */
+    public function getIconUrl()
+    {
+        return $this->icon_url;
     }
 }

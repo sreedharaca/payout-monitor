@@ -20,6 +20,7 @@ class OffersUpdate
     public function __construct(Container $container)
     {
         set_time_limit(0);
+        ini_set('memory_limit','256M');
 
         $this->container = $container;
     }
@@ -237,6 +238,7 @@ class OffersUpdate
                 $em->persist($Offer);
             }
             $em->flush();
+            $em->clear();
 
             ob_start();
             echo "-----------------------\n";
@@ -296,6 +298,7 @@ echo "Processing {$Affiliate->getName()} \n";
             foreach($data as $row){
                 $api_external_ids[] = $row['external_id'];
             }
+            $data = null;
 //echo "api ids: " . implode(',', $api_external_ids) . "\n";
 
             $db_external_ids = array();
@@ -304,6 +307,7 @@ echo "Processing {$Affiliate->getName()} \n";
             foreach($affiliateOffers as $offer){
                 $db_external_ids[] = $offer->getExternalId();
             }
+            $affiliateOffers = null;
 //echo "db ids: " . implode(',', $db_external_ids) . "\n";
 
             $stop_ids = array_diff($db_external_ids, $api_external_ids);
@@ -326,30 +330,91 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 
                 $CronLog->save('REMOVE OFFERS', "{$Affiliate->getName()}: Stop офферы: " . implode(', ', $stop_ids));
             }
+
+            $em->flush();
+            $em->clear();
+        }
+
+
+    }
+
+    public function resolveFinalUrlTask()
+    {
+echo "Resolve Final Url\n\n";
+        $em = $this->container->get('Doctrine')->getManager();
+
+        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('final_url'=>null, 'active'=>1, 'deleted'=>0));
+
+        $Curl = $this->container->get('CurlService');
+$total = count($Offers);
+$i = 0;
+        foreach($Offers as $offer){
+
+            if( $offer->isItunesPreviewUrl() || $offer->isPlayGooglePreviewUrl()  ){
+                $finalUrl = $offer->getPreviewUrl();
+            }
+            else {
+                $finalUrl = $Curl->catchRedirectUrl( str_replace('&amp;', '&', $offer->getPreviewUrl()) );
+            }
+
+            if($finalUrl){
+                $offer->setFinalUrl($finalUrl);
+            }
+
+//if($finalUrl != $offer->getPreviewUrl()){
+//    echo "  final: $finalUrl\npreview: {$offer->getPreviewUrl()}\n\n";
+//}
+            $i++;
+//echo "$i/$total\n";
+
+            if($i % 100 == 0){
+                $em->flush();
+            }
         }
 
         $em->flush();
     }
 
+    public function resolvePlatform()
+    {
+        //смотрим по финальному урл домен
+            //ios
+            //android
+            //или web
+    }
 
     /***
      * III
      */
-    public function updateOffersPlatform(){
+    public function updateOffersPlatform()
+    {
+        echo "\nResolve Platform\n";
 
         $em = $this->container->get('Doctrine')->getManager();
 
-        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('platform'=>null));
+        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('platform'=>null, 'active'=>1, 'deleted'=>0));
 
         $PlatformService = $this->container->get('PlatformService');
+
+//        $total = count($Offers);
+        $i = 0;
 
         foreach($Offers as $Offer){
 
             $Platform = $PlatformService->guessByOffer($Offer);
 
             if(!empty($Platform)){
+
                 $Offer->setPlatform($Platform);
+//echo "{$Platform->getName()}\n";
             }
+
+            if($i % 100 == 0){
+                $em->flush();
+            }
+
+            $i++;
+//            echo "$i/$total\n";
         }
 
         $em->flush();
@@ -359,16 +424,23 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
     /***
      * IV
      */
-    public function updateOffersApp(){
+    public function tieOffersToApp()
+    {
+        echo "\nTie Offer to App\n";
 
         $em = $this->container->get('Doctrine')->getManager();
 
         $CronLog = $this->container->get('CronLogService');
 
-        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('app'=>null));
+        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('app'=>null, 'active'=>1, 'deleted'=>0));
+
+        $AppService = $this->container->get('AppService');
 
         $grouped_offers = 0;
         $new_apps = 0;
+
+        $total = count($Offers);
+        $i = 0;
 
         foreach($Offers as $Offer){
 
@@ -377,8 +449,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
             if(empty($Platform)){
                 continue;
             }
-
-            $AppService = $this->container->get('AppService');
 
             $id = $AppService->parseIdByOffer($Offer);
 
@@ -410,10 +480,21 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 
                 $grouped_offers++;
                 $new_apps++;
+
+
+                //если новая аппа появилась сразу пишем в базу
+                //чтобы следующие по очереди офферы могли подвязаться к этой аппе
+                $em->flush();
             }
 
-            $em->flush();
+            if($i % 100 == 0){
+                $em->flush();
+            }
+$i++;
+//echo "$i/$total\n";
         }
+
+        $em->flush();
 
         $CronLog->save('GROUP OFFERS', "Сгруппировано офферов: $grouped_offers. Новых Апп: $new_apps");
     }
@@ -423,26 +504,87 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
     /***
      * V
      */
-    public function updateAppsData()
+    public function loadItunesAppData()
     {
+        echo "\n***Load Itunes App Data***\n";
+
         //получить все аппы из базы join с офферами where только iOS
-        //цикл по аппам
-            //если нет названия и иконки
+        $em = $this->container->get('Doctrine')->getManager();
+        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findByEmptyApps();
+
+        $Itunes = $this->container->get('Itunes');
+
+        //GET DISTINCT APPS
+        $apps = array();
+
+        foreach($Offers as $offer){
+
+            $appid = $offer->getApp()->getId();
+            $apps[$appid] = $offer->getApp();
+        }
+
+
+//        $total = count($apps);
+        $i = 0;
+
+        //LOAD DATA from ITUNES and  SET it to APP
+        foreach($apps as $app){
+
+            $itunes_id = $app->getExternalId();
+
             //запрос по айдишнику в айтюнс
+            $data = $Itunes->get($itunes_id);
+//echo "id: $itunes_id";
+//var_dump($data);
+//echo "\n";
             //обновляем данные аппы
+            if($data != false){
+                $app->setName($data['name']);
+                $app->setIconUrl($data['iconUrl60']);
+//echo "{$data['name']}:{$data['iconUrl60']}\n";
+            }
 
+            if($i % 100 == 0){
+                $em->flush();
+            }
 
-//        $ItunesService = $this->container->get('Itunes');
+$i++;
+//echo "$i/$total\n";
+        }
 
-
-        //Log->save('App', 'created', 'created App #id')
-        //Log->save('Offer', 'updated', 'Offer #id tied with App #id')
+        $em->flush();
     }
 
 
-    /***
-     * Установить категорию офферу
-     */
+    public function startSyncProcess()
+    {
+        echo "It works!\n\n";
+
+        try {
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*I*/       $this->jsonApiToDb();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*II.1*/    $this->updateOffers();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*II.2*/    $this->removeOffers();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /**/        $this->resolveFinalUrlTask();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*III*/     $this->updateOffersPlatform();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*IV*/      $this->tieOffersToApp();
+echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            /*V*/       $this->loadItunesAppData();
+        }
+        catch (\Exception $e){
+
+            $Log = $this->container->get('CronLogService');
+
+            $Log->save('FAIL !', $e->getMessage());
+        }
+
+    }
+
 
     public function tester()
     {
@@ -475,78 +617,6 @@ echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 //
 //        echo $final = $this->container->get('CurlService')->catchRedirectUrl($url);
 //        echo "\n";
-
-    }
-
-
-
-    //    /***
-//     * Распознать платформу оффера, там где ее нет
-//     */
-//    public function guessPlatform()
-//    {
-//        $em = $this->container->get('Doctrine')->getManager();
-//        $Offers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('platform'=>null));
-//
-//        foreach($Offers as $Offer){
-//            /** try by preview url */
-//            $Platform = $this->resolvePlatformByPreviewUrl($Offer->getPreviewUrl());
-//            if(!empty($Platform)) {
-//                $Offer->setPlatform($Platform);
-//            }
-//            /*** try by device */
-//            else {
-//                if( count($Offer->getDevices()) ){
-//                    $Devices = $Offer->getDevices();
-//
-//                    $Platform = $Devices[0]->getPlatform();
-//                    if( !empty($Platform) && is_object($Platform) ){
-//                        $Offer->setPlatform($Platform);
-//                    }
-//                }
-//            }
-//        }
-//
-//        $em->flush();
-//    }
-
-
-//    private function resolvePlatformByPreviewUrl($url)
-//    {
-//        if( strpos($url, 'itunes.apple.com') !== false ){
-//            $em = $this->container->get('doctrine')->getManager();
-//            $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::IOS));
-//            return $Platform;
-//        }
-//        elseif( strpos($url, 'play.google.com') !== false ){
-//            $em = $this->container->get('doctrine')->getManager();
-//            $Platform = $em->getRepository('KatanaDictionaryBundle:Platform')->findOneBy(array('name'=>Platform::ANDROID));
-//            return $Platform;
-//        }
-//        else{
-//            return false;
-//        }
-//    }
-
-
-    public function startSyncProcess()
-    {
-        echo "It works!\n\n";
-
-        try {
-            /*I*/ $this->jsonApiToDb();
-            /*II.1*/  $this->updateOffers();
-            /*II.2*/  $this->removeOffers();
-            /*III*/ $this->updateOffersPlatform();
-            /*IV*/ $this->updateOffersApp();
-    //      /*V*/  $this->updateAppsData();
-        }
-        catch (\Exception $e){
-
-            $Log = $this->container->get('CronLogService');
-
-            $Log->save('FAIL !', $e->getMessage());
-        }
 
     }
 
