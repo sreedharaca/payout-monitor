@@ -114,7 +114,7 @@
                             <img class="img-rounded offer-icon" src="{{offer.platformIconUrl}}"/>
                         </td>
                         <td style="max-width:40px; max-height:40px;">
-                            <img class="img-rounded offer-icon" src="{{offer.icon}}"/>
+                            <img class="img-rounded offer-icon" ng-show="offer.icon.length>0" src="{{offer.icon}}"/>
                         </td>
                         <td width="60px">{{ offer.partner }}</td>
                         <td width=""><a href="{{ offer.externalUrl }}" target="_blank">{{ offer.name }}</a>
@@ -148,7 +148,7 @@
             <table class="table table-condensed">
                 <tr class="" ng-repeat="offer in relative_offers">
                     <td style="width: 40px; min-width: 30px;">
-                        <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
+                        <img class="img-rounded offer-icon" ng-show="offer.icon.length>0" src="{{ offer.icon }}"/>
                     </td>
                     <td width="50px">{{offer.partner}}</td>
                     <td width="40%"><a href="{{ offer.externalUrl }}" target="_blank">{{offer.name}}</a></td>
