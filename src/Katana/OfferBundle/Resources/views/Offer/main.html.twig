@@ -121,7 +121,7 @@
                                         <img class="img-rounded offer-icon" src="{{offer.icon}}"/>
                                     </td>
                                     <td width="60px">{{ offer.partner }}</td>
-                                    <td width=""><a href="#" target="_blank">{{ offer.name }}</a>
+                                    <td width=""><a href="{{ offer.externalUrl }}" target="_blank">{{ offer.name }}</a>
                                         <span pop-over data-offer-id="{{ offer.id }}" ng-show="offer.relative_offers.length > 0" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
                                             {{ offer.relative_offers.length ? '+' + offer.relative_offers.length : ''  }}
                                         </span>
@@ -166,7 +166,7 @@
                                         <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
                                     </td-->
                                     <td width="60px">{{ offer.partner }}</td>
-                                    <td width=""><a href="#" target="_blank">{{ offer.name }}</a>
+                                    <td width=""><a href="{{ offer.externalUrl }}" target="_blank">{{ offer.name }}</a>
                                         <span pop-over data-offer-id="{{ offer.id }}" ng-show="offer.relative_offers.length > 0" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
                                             {{ offer.relative_offers.length ? '+' + offer.relative_offers.length : ''  }}
                                         </span>
@@ -203,7 +203,7 @@
                         <img class="img-rounded offer-icon" src="{{ offer.icon }}"/>
                     </td>
                     <td width="50px">{{offer.partner}}</td>
-                    <td width="40%"><a href="#" target="_blank">{{offer.name}}</a></td>
+                    <td width="40%"><a href="{{ offer.externalUrl }}" target="_blank">{{offer.name}}</a></td>
                     <td width="60px">{{ offer.payout }}</td>
                     <td width="3%"><span class="label label-info">{{ offer.device }}</span></td>
                     <td width="20%">

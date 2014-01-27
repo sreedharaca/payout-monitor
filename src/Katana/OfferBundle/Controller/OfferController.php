@@ -40,164 +40,164 @@ class OfferController extends Controller
     }
 
 
-    /**
-     *
-     * @Route("/old", name="offers_old")
-     * @Method("GET")
-     * @Template("KatanaOfferBundle:Offer:index.html.twig")
-     */
-    public function indexAction()
-    {
-        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAllOffers();
-//        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAll();
-
-        list($apps, $nonGroupedOffers) = $this->groupOffers($all_offers);
-
-        /*** FIND BEST PAYOUT  */
-        foreach($apps as $id => $app){
-            $sortedOffers = $this->sortOffersByPayoutAndGeo($app['offers']);
-
-            $bestOffer = array_pop($sortedOffers);
-            $apps[$id]['bestOffer'] = $bestOffer;
-            $apps[$id]['offers'] = $sortedOffers;
-        }
-
-        /*** SORT APPS */
-        $apps = $this->sortAppsByName($apps);
-
-
-        return array(
-            'form' => $this->createForm(new OfferFilterType())->createView(),
-            'nonGroupedOffers' => $nonGroupedOffers,
-            'apps' => $apps
-        );
-    }
-
-
-    /**
-     *
-     * @Route("/filter", name="filter_offers")
-     * @Method("POST")
-     * @Template("KatanaOfferBundle:Offer:index.html.twig")
-     */
-    public function filterOffersAction(Request $request)
-    {
-        $form = $this->createForm(new OfferFilterType());
-        $form->submit($request);
-
-        if($form->isValid())
-        {
-            $data = $form->getData();
-
-            $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByFiltersData($data);
-
-            list($apps, $nonGroupedOffers) = $this->groupOffers($all_offers);
-
-            /*** FIND BEST PAYOUT  */
-            foreach($apps as $id => $app){
-                $sortedOffers = $this->sortOffersByPayoutAndGeo($app['offers']);
-
-                $bestOffer = array_pop($sortedOffers);
-                $apps[$id]['bestOffer'] = $bestOffer;
-                $apps[$id]['offers'] = $sortedOffers;
-            }
-
-            /*** SORT APPS */
-            $apps = $this->sortAppsByName($apps);
-        }
+//    /**
+//     *
+//     * @Route("/old", name="offers_old")
+//     * @Method("GET")
+//     * @Template("KatanaOfferBundle:Offer:index.html.twig")
+//     */
+//    public function indexAction()
+//    {
+//        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAllOffers();
+////        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->findAll();
+//
+//        list($apps, $nonGroupedOffers) = $this->groupOffers($all_offers);
+//
+//        /*** FIND BEST PAYOUT  */
+//        foreach($apps as $id => $app){
+//            $sortedOffers = $this->sortOffersByPayoutAndGeo($app['offers']);
+//
+//            $bestOffer = array_pop($sortedOffers);
+//            $apps[$id]['bestOffer'] = $bestOffer;
+//            $apps[$id]['offers'] = $sortedOffers;
+//        }
+//
+//        /*** SORT APPS */
+//        $apps = $this->sortAppsByName($apps);
+//
+//
+//        return array(
+//            'form' => $this->createForm(new OfferFilterType())->createView(),
+//            'nonGroupedOffers' => $nonGroupedOffers,
+//            'apps' => $apps
+//        );
+//    }
 
 
-        return array(
-            'form' => $form->createView(),
-            'nonGroupedOffers' => $nonGroupedOffers,
-            'apps' => $apps
-        );
-    }
+//    /**
+//     *
+//     * @Route("/filter", name="filter_offers")
+//     * @Method("POST")
+//     * @Template("KatanaOfferBundle:Offer:index.html.twig")
+//     */
+//    public function filterOffersAction(Request $request)
+//    {
+//        $form = $this->createForm(new OfferFilterType());
+//        $form->submit($request);
+//
+//        if($form->isValid())
+//        {
+//            $data = $form->getData();
+//
+//            $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByFiltersData($data);
+//
+//            list($apps, $nonGroupedOffers) = $this->groupOffers($all_offers);
+//
+//            /*** FIND BEST PAYOUT  */
+//            foreach($apps as $id => $app){
+//                $sortedOffers = $this->sortOffersByPayoutAndGeo($app['offers']);
+//
+//                $bestOffer = array_pop($sortedOffers);
+//                $apps[$id]['bestOffer'] = $bestOffer;
+//                $apps[$id]['offers'] = $sortedOffers;
+//            }
+//
+//            /*** SORT APPS */
+//            $apps = $this->sortAppsByName($apps);
+//        }
+//
+//
+//        return array(
+//            'form' => $form->createView(),
+//            'nonGroupedOffers' => $nonGroupedOffers,
+//            'apps' => $apps
+//        );
+//    }
 
-    private function groupOffers($all_offers)
-    {
-        /** Сгруппированные офферы */
-        /***
-         *  app_id:
-         *      'app': App
-         *      'offers': [Offers]
-         */
-        $apps = array();
-        /** Не сгруппированные офферы */
-        $nonGroupedOffers = array();
+//    private function groupOffers($all_offers)
+//    {
+//        /** Сгруппированные офферы */
+//        /***
+//         *  app_id:
+//         *      'app': App
+//         *      'offers': [Offers]
+//         */
+//        $apps = array();
+//        /** Не сгруппированные офферы */
+//        $nonGroupedOffers = array();
+//
+//        foreach($all_offers as $offer)
+//        {
+//            $App = $offer->getApp();
+//
+//            if( !empty( $App ) ){
+//
+//                $app_id = $offer->getApp()->getId();
+//
+//                if(!isset($apps[$app_id])) {
+//                    $apps[$app_id] = array(
+//                        'app'   => $offer->getApp(),
+//                        'offers' => array()
+//                    );
+//                }
+//
+//                $apps[$app_id]['offers'][] = $offer;
+//            }
+//            else{
+//                $nonGroupedOffers[] = $offer;
+//            }
+//        }
+//
+//        return array(
+//            $apps,
+//            $nonGroupedOffers
+//        );
+//    }
 
-        foreach($all_offers as $offer)
-        {
-            $App = $offer->getApp();
+//    /***
+//     * @param array
+//     * $returns array
+//     */
+//    private function sortOffersByPayoutAndGeo($Offers)
+//    {
+//        usort($Offers, function($Offer1, $Offer2){
+//
+//            /** сортируем по возрастанию Payout */
+//            if( $Offer1->getPayout() == $Offer2->getPayout() ){
+//                /** Если ставка одинаковая то по широте ГЕО */
+//                if( count($Offer1->getCountries()) == count($Offer2->getCountries()) ){
+//                    return 0;
+//                }
+//
+//                return (count($Offer1->getCountries()) < count($Offer2->getCountries())) ? -1 : 1;
+//            }
+//
+//            return ($Offer1->getPayout() < $Offer2->getPayout()) ? -1 : 1;
+//        });
+//
+//
+//        return $Offers;
+//    }
 
-            if( !empty( $App ) ){
-
-                $app_id = $offer->getApp()->getId();
-
-                if(!isset($apps[$app_id])) {
-                    $apps[$app_id] = array(
-                        'app'   => $offer->getApp(),
-                        'offers' => array()
-                    );
-                }
-
-                $apps[$app_id]['offers'][] = $offer;
-            }
-            else{
-                $nonGroupedOffers[] = $offer;
-            }
-        }
-
-        return array(
-            $apps,
-            $nonGroupedOffers
-        );
-    }
-
-    /***
-     * @param array
-     * $returns array
-     */
-    private function sortOffersByPayoutAndGeo($Offers)
-    {
-        usort($Offers, function($Offer1, $Offer2){
-
-            /** сортируем по возрастанию Payout */
-            if( $Offer1->getPayout() == $Offer2->getPayout() ){
-                /** Если ставка одинаковая то по широте ГЕО */
-                if( count($Offer1->getCountries()) == count($Offer2->getCountries()) ){
-                    return 0;
-                }
-
-                return (count($Offer1->getCountries()) < count($Offer2->getCountries())) ? -1 : 1;
-            }
-
-            return ($Offer1->getPayout() < $Offer2->getPayout()) ? -1 : 1;
-        });
-
-
-        return $Offers;
-    }
-
-    private function sortAppsByName($apps)
-    {
-        usort($apps, function($app1, $app2){
-
-            $name1 = $app1['app']->getName();
-            if(!strlen($app1['app']->getName())){
-                $name1 = $app1['bestOffer']->getName();
-            }
-
-            $name2 = $app2['app']->getName();
-            if(!strlen($app2['app']->getName())){
-                $name2 = $app2['bestOffer']->getName();
-            }
-
-            return strcasecmp($name1, $name2);
-        });
-
-        return $apps;
-    }
+//    private function sortAppsByName($apps)
+//    {
+//        usort($apps, function($app1, $app2){
+//
+//            $name1 = $app1['app']->getName();
+//            if(!strlen($app1['app']->getName())){
+//                $name1 = $app1['bestOffer']->getName();
+//            }
+//
+//            $name2 = $app2['app']->getName();
+//            if(!strlen($app2['app']->getName())){
+//                $name2 = $app2['bestOffer']->getName();
+//            }
+//
+//            return strcasecmp($name1, $name2);
+//        });
+//
+//        return $apps;
+//    }
 
     /**
      *
@@ -232,35 +232,35 @@ class OfferController extends Controller
     }
 
 
-    /**
-     * @Route("/delete", name="offer_delete")
-     * @Method("POST")
-     *
-     * , requirements={"id" = "\d+"}
-     */
-    public function deleteAction(Request $request)
-    {
-        $id = (int) $request->request->get('id');
-
-        if (!$id) {
-            throw $this->createNotFoundException('Не передан параметр id.');
-        }
-
-        $em = $this->getDoctrine()->getManager();
-
-        $offer = $em->getRepository('KatanaOfferBundle:Offer')->find($id);
-
-        if (!$offer || $offer->getDeleted()) {
-            throw $this->createNotFoundException('Оффер не найден.');
-        }
-
-        $offer->setDeleted(true);
-        $offer->setActive(false);
-
-        $em->flush();
-
-        return new JsonResponse(array('status' => 'ok'));
-    }
+//    /**
+//     * @Route("/delete", name="offer_delete")
+//     * @Method("POST")
+//     *
+//     * , requirements={"id" = "\d+"}
+//     */
+//    public function deleteAction(Request $request)
+//    {
+//        $id = (int) $request->request->get('id');
+//
+//        if (!$id) {
+//            throw $this->createNotFoundException('Не передан параметр id.');
+//        }
+//
+//        $em = $this->getDoctrine()->getManager();
+//
+//        $offer = $em->getRepository('KatanaOfferBundle:Offer')->find($id);
+//
+//        if (!$offer || $offer->getDeleted()) {
+//            throw $this->createNotFoundException('Оффер не найден.');
+//        }
+//
+//        $offer->setDeleted(true);
+//        $offer->setActive(false);
+//
+//        $em->flush();
+//
+//        return new JsonResponse(array('status' => 'ok'));
+//    }
 
 
     /**

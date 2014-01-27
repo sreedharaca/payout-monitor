@@ -55,6 +55,7 @@ class OfferData {
             'payout'        => $this->offer->getPayout(),
             'device'        => $device_name,
             'countries'     => $countries,
+            'externalUrl' => $this->offer->getAffiliate()->generateOfferUrl($this->offer->getExternalId()),
             'is_incentive'  => $this->offer->getIncentive(),
             'is_new'        => $this->offer->getNew(),
             'platform'      => $this->offer->getPlatform()->getName(),
