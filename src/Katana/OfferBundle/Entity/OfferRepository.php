@@ -302,6 +302,9 @@ class OfferRepository extends EntityRepository
             ->leftJoin('offer.affiliate', 'a')
         ;
 
+        $qb->where('offer.active = 1')
+            ->andWhere('offer.deleted = 0');
+
         /** Affiliate */
         if( !empty($data['affiliate']) )
         {
