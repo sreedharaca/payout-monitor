@@ -9,6 +9,7 @@
                 <th>Id</th>
                 <th>Name</th>
                 <th>Apiurl</th>
+                <th>Offer Url</th>
                 <th>Active</th>
                 <th>Actions</th>
             </tr>
@@ -19,6 +20,7 @@
                 <td><a href="{{ path('affiliate_show', { 'id': entity.id }) }}">{{ entity.id }}</a></td>
                 <td>{{ entity.name }}</td>
                 <td>{{ entity.apiUrl }} <a href="http://jsonviewer.stack.hu/#{{ entity.apiUrl }}" target="_blank">json viewer</a></td>
+                <td>{{ entity.offerUrl }}</td>
                 <td>{{ entity.active }}</td>
                 <td>
                 <ul>

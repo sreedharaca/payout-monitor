@@ -17,6 +17,7 @@ class AffiliateType extends AbstractType
         $builder
             ->add('name')
             ->add('apiUrl')
+            ->add('offerUrl')
             ->add('active', 'checkbox', array(
                 'required' => false
             ))

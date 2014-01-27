@@ -36,6 +36,13 @@ class Affiliate
     private $apiUrl;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="offer_url", type="string", length=255)
+     */
+    private $offerUrl;
+
+    /**
      * @ORM\OneToOne(targetEntity="AffiliateJson")
      * @ORM\JoinColumn(name="affiliate_json_id", referencedColumnName="id")
      */
@@ -87,6 +94,12 @@ class Affiliate
         $this->setAffiliateJson($AffiliateJson);
 
         return $AffiliateJson;
+    }
+
+
+    public function generateOfferUrl($offerId)
+    {
+        return str_replace('{offer_id}', $offerId, $this->getOfferUrl());
     }
 
 
@@ -232,5 +245,28 @@ class Affiliate
     public function getAffiliateJson()
     {
         return $this->affiliate_json;
+    }
+
+    /**
+     * Set offerUrl
+     *
+     * @param string $offerUrl
+     * @return Affiliate
+     */
+    public function setOfferUrl($offerUrl)
+    {
+        $this->offerUrl = $offerUrl;
+    
+        return $this;
+    }
+
+    /**
+     * Get offerUrl
+     *
+     * @return string 
+     */
+    public function getOfferUrl()
+    {
+        return $this->offerUrl;
     }
 }
