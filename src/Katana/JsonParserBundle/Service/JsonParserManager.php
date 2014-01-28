@@ -10,6 +10,7 @@ use Katana\JsonParserBundle\Parser\KatanaJsonParser;
 use Katana\JsonParserBundle\Parser\Ad4gameJsonParser;
 use Katana\JsonParserBundle\Parser\UnicumeJsonParser;
 use Katana\JsonParserBundle\Parser\ComboappJsonParser;
+use Katana\JsonParserBundle\Parser\MobilePartnerJsonParser;
 
 
 class JsonParserManager
@@ -23,6 +24,7 @@ class JsonParserManager
     const PROVIDER_ICONPEAK  = 'Iconpeak';
     const PROVIDER_KISSMYADS = 'Kissmyads';
     const PROVIDER_TAPGERINE = 'Tapgerine';
+    const PROVIDER_MOBPARTNER= 'MobPartKat';
 
     //TODO добавить все сетки
 
@@ -71,6 +73,10 @@ class JsonParserManager
 
             case self::PROVIDER_ADSUP:
                 return new HasoffersBaseJsonParser($this->container);
+                break;
+
+            case self::PROVIDER_MOBPARTNER:
+                return new MobilePartnerJsonParser($this->container);
                 break;
 
             default:

@@ -3,6 +3,8 @@
 namespace Katana\SyncBundle\Service;
 
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
+use Katana\SyncBundle\Lib\Curl\UrlResolver;
+use Katana\SyncBundle\Lib\Curl\MetaRedirFinder;
 
 
 class CurlService
@@ -14,48 +16,35 @@ class CurlService
     }
 
 
-    public function catchRedirectUrl($url)
+    public function catchRedirectUrl($startUrl)
     {
+        $resolver = new UrlResolver();
+
+        $resolver->addFinder(new MetaRedirFinder());
+
         $options = array(
             CURLOPT_RETURNTRANSFER => true,     // return web page
-            CURLOPT_HEADER         => true,    // return headers
+            CURLOPT_HEADER         => false,    // return headers
             CURLOPT_FOLLOWLOCATION => true,     // follow redirects
             CURLOPT_ENCODING       => "",       // handle all encodings
-            CURLOPT_USERAGENT      => "spider", // who am i
+            CURLOPT_USERAGENT      => "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1", // who am i
             CURLOPT_AUTOREFERER    => true,     // set referer on redirect
-            CURLOPT_CONNECTTIMEOUT => 20,      // timeout on connect
-            CURLOPT_TIMEOUT        => 20,      // timeout on response
-            CURLOPT_MAXREDIRS      => 30,       // stop after 10 redirects
-            CURLOPT_NOBODY         => true,       // stop after 10 redirects
-            CURLOPT_COOKIEJAR      => 'cookies.txt',
-            CURLOPT_COOKIEFILE     => 'cookies.txt',
+            CURLOPT_CONNECTTIMEOUT => 120,      // timeout on connect
+            CURLOPT_TIMEOUT        => 120,      // timeout on response
+            CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
+            CURLOPT_NOBODY         => false,       // stop after 10 redirects
+            //CURLOPT_HTTPHEADER      => array("Content-Type:application/x-www-form-urlencoded"),
+            //CURLOPT_COOKIEJAR      => 'cookies.txt',
+            //CURLOPT_COOKIEFILE     => 'cookies.txt',
             CURLOPT_SSLVERSION     => 3,
             CURLOPT_SSL_VERIFYPEER => false
         );
 
-        $ch      = curl_init( $url );
-        curl_setopt_array( $ch, $options );
+        $resolver->setCurlOptions($options);
 
-        $content = curl_exec( $ch );
+        $finalUrl = $resolver->getFinalUrl($startUrl);
 
-//        $err     = curl_errno( $ch );
-//        $errmsg  = curl_error( $ch );
-
-        $header  = curl_getinfo( $ch, CURLINFO_EFFECTIVE_URL);
-
-        curl_close( $ch );
-
-//        var_dump($header);
-
-        //$header['errno']   = $err;
-        // $header['errmsg']  = $errmsg;
-        //$header['content'] = $content;
-//            print($header[0]);
-
-        if(!isset($header)){
-            return false;
-        }
-
-        return $header;
+        return $finalUrl;
     }
+
 }

@@ -63,10 +63,10 @@ class HasoffersBaseJsonParser extends BaseJsonParser
             /***
              * Платформа
              */
-            $PlatformService = $this->container->get('PlatformService');
-            $Platform = $PlatformService->guessByRawString($offer['categories']);
-
-            $row['platform'] = $Platform;
+//            $PlatformService = $this->container->get('PlatformService');
+//            $Platform = $PlatformService->guessByRawString($offer['categories']);
+//
+//            $row['platform'] = $Platform;
 
             $data[] = $row;
         }

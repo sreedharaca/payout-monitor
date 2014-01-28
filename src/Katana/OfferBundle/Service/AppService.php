@@ -46,11 +46,8 @@ class AppService {
                 return $id = $parts['host'];
             }
         }
-        else{
-            $id = false;
-        }
 
-        return $id;
+        return false;
     }
 
 }

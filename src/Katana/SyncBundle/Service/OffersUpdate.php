@@ -67,13 +67,13 @@ class OffersUpdate
             $Affiliate->setJson($json);
 
             $em->flush();
-            $em->clear();
 
             echo "{$Affiliate->getName()}: got " . ((int)(strlen($json)/1024)) . " Kbytes\n";
 
             $CronLog->save('LOAD API JSON', "{$Affiliate->getName()}: got " . ((int)(strlen($json)/1024)) . " Kbytes \n");
         }
 
+        $em->clear();
     }
 
     /***
@@ -92,6 +92,12 @@ class OffersUpdate
         //loop affiliates
         foreach($Affiliates as $Affiliate)
         {
+            // reset the EM and all aias
+//            $this->container->set('doctrine.orm.entity_manager', null);
+//            $this->container->set('doctrine.orm.default_entity_manager', null);
+// get a fresh EM
+//            $em = $this->container->get('doctrine')->getManager();
+
             $total_rows = 0;
             $update_rows = 0;
             $new_rows = 0;
@@ -123,6 +129,7 @@ class OffersUpdate
             }
 //            var_dump($data);
 
+            $i = 0;
             //loop array
             foreach($data as $row)
             {
@@ -153,9 +160,9 @@ class OffersUpdate
                     $Offer->setDeleted(false);
                     $Offer->setJson(null);
 
-                    if(!empty($row['platform']) && is_object($row['platform'])){
-                        $Offer->setPlatform($row['platform']);
-                    }
+//                    if(!empty($row['platform']) && is_object($row['platform'])){
+//                        $Offer->setPlatform($row['platform']);
+//                    }
 
                     /***
                      * Update devices
@@ -178,7 +185,7 @@ class OffersUpdate
                     /***
                      * Update countries
                      */
-                    $Countries = $em->getRepository('KatanaDictionaryBundle:Country')->findByOffer($Offer);
+//                    $Countries = $em->getRepository('KatanaDictionaryBundle:Country')->findByOffer($Offer);
 
                     //remove old countries from offer
 //                    foreach($Countries as $country){
@@ -211,9 +218,9 @@ class OffersUpdate
                     $Offer->setJson(null);
 
 
-                    if(!empty($row['platform']) && is_object($row['platform'])){
-                        $Offer->setPlatform($row['platform']);
-                    }
+//                    if(!empty($row['platform']) && is_object($row['platform'])){
+//                        $Offer->setPlatform($row['platform']);
+//                    }
 
                     /***
                      * Add devices
@@ -231,14 +238,21 @@ class OffersUpdate
                         $Offer->addCountrie($country);
                     }
 
+                    $em->persist($Offer);
+//                    $em->flush();
+
                     $Log->save(Log::ACTION_NEW, '', $Offer);
 
                     $new_rows++;
                 }
-                $em->persist($Offer);
+
+                $i++;
+
+                if($i % 100 == 0){
+                    $em->flush();
+                }
             }
             $em->flush();
-            $em->clear();
 
             ob_start();
             echo "-----------------------\n";
@@ -252,6 +266,7 @@ class OffersUpdate
             $CronLog->save('UPDATE OFFERS', "{$Affiliate->getName()}: Всего офферов: $total_rows. Обновлено офферов: $update_rows. Новых офферов: $new_rows.");
         }//end: loop Affiliates
 
+        $em->clear();
         //Log->save('Offer','updated', 'updated Offer #id')
         //Log->save('Offer','created', 'created Offer #id')
     }
@@ -373,14 +388,6 @@ $i = 0;
         }
 
         $em->flush();
-    }
-
-    public function resolvePlatform()
-    {
-        //смотрим по финальному урл домен
-            //ios
-            //android
-            //или web
     }
 
     /***
@@ -586,41 +593,6 @@ echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
     }
 
 
-    public function tester()
-    {
-        echo "It works!\n\n";
-
-//        /*I*/ $this->jsonApiToDb();
-//      /*II.1*/  $this->updateOffers();
-//      /*II.2*/  $this->removeOffers();
-//      /*III*/ $this->updateOffersPlatform();
-//        /*IV*/ $this->updateOffersApp();
-//      /*V*/  $this->updateAppsData();
-
-
-//        $this->parseIdFromPreviewUrl();
-
-//        $this->parsePreviewUrl();
-
-
-//        $PlatformService = $this->container->get('PlatformService');
-//        $Platform = $PlatformService->guessByRawString('Web Games');
-//
-//        var_dump($Platform->getName());
-
-//        $result = $this->resolvePlatformByPreviewUrl("https://itunes.apple.com/app/id529996768?mt=8");
-//        var_dump($result);
-
-
-//        echo $url = 'http://app.appsflyer.com/com.dianxinos.dxbs?pid=yeahmobi_int&c=PH&clickid={transaction_id}&af_siteid={affiliate_id}';
-//        echo "\n";
-//
-//        echo $final = $this->container->get('CurlService')->catchRedirectUrl($url);
-//        echo "\n";
-
-    }
-
-
     /**
      * Запросить данные из API по партнерской ссылке
      *
@@ -647,29 +619,6 @@ echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
         }
 
         return $json;
-    }
-
-
-    public function show()
-    {
-
-        echo 'it works!';
-
-        exit;
-
-        $Offers = $this->container->get('doctrine')->getRepository('KatanaOfferBundle:Offer')->findAll();
-        foreach ($Offers as $Offer)
-        {
-            echo $Offer->getName()." === ";
-            echo (is_object($Offer->getApp())?$Offer->getApp()->getName():'      --- ');
-            echo "\n";
-        }
-    }
-
-
-    public function run(){
-//        set_time_limit(0);
-        echo 'it works!';
     }
 
 }

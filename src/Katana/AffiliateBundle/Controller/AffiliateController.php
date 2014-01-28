@@ -9,6 +9,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Katana\AffiliateBundle\Entity\Affiliate;
 use Katana\AffiliateBundle\Form\AffiliateType;
+use Katana\AffiliateBundle\Entity\AffiliateJson;
 
 /**
  * Affiliate controller.
@@ -50,6 +51,9 @@ class AffiliateController extends Controller
 
         if ($form->isValid()) {
             $em = $this->getDoctrine()->getManager();
+            $aff_json = new AffiliateJson();
+            $entity->setAffiliateJson($aff_json);
+            $em->persist($aff_json);
             $em->persist($entity);
             $em->flush();
 

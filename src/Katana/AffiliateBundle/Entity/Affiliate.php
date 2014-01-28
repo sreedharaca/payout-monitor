@@ -43,7 +43,7 @@ class Affiliate
     private $offerUrl;
 
     /**
-     * @ORM\OneToOne(targetEntity="AffiliateJson")
+     * @ORM\OneToOne(targetEntity="AffiliateJson", cascade={"persist"})
      * @ORM\JoinColumn(name="affiliate_json_id", referencedColumnName="id")
      */
     private $affiliate_json;
