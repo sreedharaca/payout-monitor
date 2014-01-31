@@ -31,6 +31,8 @@ class AppKernel extends Kernel
             new Katana\SyncBundle\KatanaSyncBundle(),
             new Katana\LogBundle\KatanaLogBundle(),
             new Mopa\Bundle\BootstrapBundle\MopaBootstrapBundle(),
+            new Katana\ImportBundle\KatanaImportBundle(),
+            new Katana\StatusBundle\KatanaStatusBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {

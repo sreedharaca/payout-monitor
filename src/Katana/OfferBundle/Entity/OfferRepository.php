@@ -8,6 +8,7 @@ use Katana\DictionaryBundle\Entity\Device;
 use Katana\DictionaryBundle\Entity\Platform;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Katana\OfferBundle\Entity\App;
+use Katana\AffiliateBundle\Entity\Affiliate;
 
 /**
  * OfferRepository
@@ -379,4 +380,107 @@ class OfferRepository extends EntityRepository
 
         return $qb->getQuery()->execute();
     }
+
+
+
+    /***
+     * Получение суммарной статы
+     */
+
+    /*************************************************************
+     * Offer Stats
+     */
+    public function getTotalCount()
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(offer.id)')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
+    public function getCountByPlatform($platform)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(offer.id)')
+            ->join('offer.platform', 'p')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+            ->andWhere('p.name = :pl')
+            ->setParameter('pl', $platform)
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
+    /**************************************************************
+     * APP Stats
+     */
+    public function getAppTotalCount()
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(distinct offer.app)')
+            ->join('offer.app', 'app')
+//            ->join('offer.platform', 'p')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
+    public function getAppCountByPlatform($platform)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(distinct offer.app)')
+            ->join('offer.app', 'app')
+            ->join('offer.platform', 'p')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+            ->andWhere('p.name = :pl')
+            ->setParameter('pl', $platform)
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
+    /*************************************************************
+     * AFFILIATE Stats
+     */
+    public function getAffiliateTotalCount(Affiliate $Affiliate)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(offer.id)')
+            ->join('offer.affiliate', 'a')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+            ->andWhere('a = :affiliate')
+            ->setParameter('affiliate', $Affiliate)
+
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
+    public function getCountByAffiliatePlatform(Affiliate $Affiliate, $platform)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('count(offer.id)')
+            ->join('offer.platform', 'p')
+            ->join('offer.affiliate', 'a')
+            ->where('offer.deleted = 0')
+            ->andWhere('offer.active = 1')
+
+            ->andWhere('p.name = :pl')
+            ->setParameter('pl', $platform)
+
+            ->andWhere('a = :affiliate')
+            ->setParameter('affiliate', $Affiliate)
+        ;
+
+        return $qb->getQuery()->execute();
+    }
+
 }

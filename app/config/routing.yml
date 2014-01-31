@@ -1,3 +1,13 @@
+katana_status:
+    resource: "@KatanaStatusBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+katana_import:
+    resource: "@KatanaImportBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
 katana_log:
     resource: "@KatanaLogBundle/Controller/"
     type:     annotation

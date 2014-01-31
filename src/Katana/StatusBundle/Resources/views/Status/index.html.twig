@@ -1,0 +1,101 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+
+    <style>
+        .float-block {
+            display: inline-block;
+            float: left;
+            margin-right: 20px;
+            min-width: 170px;
+        }
+
+        /* Base class */
+        .bs-docs-example {
+            position: relative;
+            margin: 10px 10px;
+            padding: 10px 19px 10px;
+            *padding-top: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+        }
+
+        .text-right{
+            text-align: right;
+        }
+
+        /* Echo out a label for the example */
+        /*.bs-docs-example:after {*/
+            /*content: "Example";*/
+            /*position: absolute;*/
+            /*top: -1px;*/
+            /*left: -1px;*/
+            /*padding: 3px 7px;*/
+            /*font-size: 12px;*/
+            /*font-weight: bold;*/
+            /*background-color: #f5f5f5;*/
+            /*border: 1px solid #ddd;*/
+            /*color: #9da0a4;*/
+            /*-webkit-border-radius: 4px 0 4px 0;*/
+            /*-moz-border-radius: 4px 0 4px 0;*/
+            /*border-radius: 4px 0 4px 0;*/
+        /*}*/
+
+    </style>
+
+    {% include '::navbar.html.twig' %}
+
+    <div class="container">
+
+        <div class="float-block bs-docs-example">
+            <h3>Офферы</h3>
+            <table class="table table-striped">
+                <tr><th>Всего:</th>     <th class="text-right">{{ offers.total }}</th></tr>
+                <tr><td>iOS:</td>       <td class="text-right">{{ offers.ios }}</td></tr>
+                <tr><td>Android:</td>   <td class="text-right">{{ offers.android }}</td></tr>
+                <tr><td>Web:</td>       <td class="text-right">{{ offers.web }}</td></tr>
+            </table>
+        </div>
+
+
+        <div class="float-block bs-docs-example">
+            <h3>Аппы</h3>
+            <table class="table">
+                <tr><th>Всего:</th>     <th class="text-right">{{ apps.total }}</th></tr>
+                <tr><td>iOS:</td>       <td class="text-right">{{ apps.ios }}</td></tr>
+                <tr><td>Android:</td>   <td class="text-right">{{ apps.android }}</td></tr>
+                <tr><td>Web:</td>       <td class="text-right">{{ apps.web }}</td></tr>
+            </table>
+        </div>
+
+        <div style="clear: both"></div>
+
+        <hr>
+
+        <h3>Сетки</h3>
+
+        {% for net in nets %}
+
+            <div class="float-block bs-docs-example ">
+                <h4>{{ net.name }}</h4>
+                <table class="table">
+                    <tr><th>Всего:</th>     <th class="text-right">{{ net.total }}</th></tr>
+                    <tr><td>iOS:</td>       <td class="text-right">{{ net.ios }}</td></tr>
+                    <tr><td>Android:</td>   <td class="text-right">{{ net.android }}</td></tr>
+                    <tr><td>Web:</td>       <td class="text-right">{{ net.web }}</td></tr>
+                </table>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endblock %}
+
+{% block inline_javascripts %}
+    <script>
+    </script>
+{% endblock %}
