@@ -43,17 +43,29 @@ class Affiliate
     private $offerUrl;
 
     /**
-     * @ORM\OneToOne(targetEntity="AffiliateJson", cascade={"persist"})
-     * @ORM\JoinColumn(name="affiliate_json_id", referencedColumnName="id")
+     * @ORM\OneToMany(targetEntity="RawData", mappedBy="affiliate", fetch="EXTRA_LAZY", cascade={"persist"})
      */
-    private $affiliate_json;
+    private $rawData;
 
     /**
      * @var
      * @ORM\Column(name="active", type="boolean", options={"default":"1"})
      */
     private $active;
-    
+
+
+    /**
+     * @var
+     * @ORM\Column(name="partial_loading", type="boolean", options={"default":"0"})
+     */
+    private $partialLoading;
+
+    /**
+     * @var
+     * @ORM\Column(name="need_auth", type="boolean", options={"default":"0"})
+     */
+    private $needAuth;
+
     /**
      * @ORM\OneToMany(targetEntity="Katana\OfferBundle\Entity\Offer", mappedBy="affiliate")
      * @ ORM\JoinColumn(name="offer_id", referencedColumnName="id")
@@ -65,43 +77,17 @@ class Affiliate
         return $this->getName();
     }
 
-    public function truncateJson()
-    {
-        $Json = $this->getAffiliateJson();
-
-        if(!empty($Json)){
-            $Json->setJson(null);
-        }
-
-        return $this;
-    }
-
-    public function setJson($json)
-    {
-        $AffJson = $this->getAffiliateJson();
-
-        if( !empty($AffJson) ){
-            $AffJson->setJson($json);
-        }
-
-        return $this;
-    }
-
-    public function createAffiliateJson()
-    {
-        $AffiliateJson = new AffiliateJson();
-
-        $this->setAffiliateJson($AffiliateJson);
-
-        return $AffiliateJson;
-    }
-
 
     public function generateOfferUrl($offerId)
     {
         return str_replace('{offer_id}', $offerId, $this->getOfferUrl());
     }
 
+
+    public function isNeededAuth()
+    {
+        return $this->needAuth;
+    }
 
     /**
      * Get id
@@ -164,8 +150,6 @@ class Affiliate
     public function __construct()
     {
         $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
-
-        $this->affiliate_json = new AffiliateJson();
     }
     
     /**
@@ -225,29 +209,6 @@ class Affiliate
     }
 
     /**
-     * Set affiliate_json
-     *
-     * @param \Katana\AffiliateBundle\Entity\AffiliateJson $affiliateJson
-     * @return Affiliate
-     */
-    public function setAffiliateJson(\Katana\AffiliateBundle\Entity\AffiliateJson $affiliateJson = null)
-    {
-        $this->affiliate_json = $affiliateJson;
-    
-        return $this;
-    }
-
-    /**
-     * Get affiliate_json
-     *
-     * @return \Katana\AffiliateBundle\Entity\AffiliateJson 
-     */
-    public function getAffiliateJson()
-    {
-        return $this->affiliate_json;
-    }
-
-    /**
      * Set offerUrl
      *
      * @param string $offerUrl
@@ -268,5 +229,92 @@ class Affiliate
     public function getOfferUrl()
     {
         return $this->offerUrl;
+    }
+
+    /**
+     * Add rawData
+     *
+     * @param \Katana\AffiliateBundle\Entity\RawData $rawData
+     * @return Affiliate
+     */
+    public function addRawData(\Katana\AffiliateBundle\Entity\RawData $rawData)
+    {
+        $this->rawData[] = $rawData;
+    
+        return $this;
+    }
+
+    /**
+     * Remove rawData
+     *
+     * @param \Katana\AffiliateBundle\Entity\RawData $rawData
+     */
+    public function removeRawData(\Katana\AffiliateBundle\Entity\RawData $rawData)
+    {
+        $this->rawData->removeElement($rawData);
+    }
+
+    /**
+     * Get rawData
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getRawData()
+    {
+        return $this->rawData;
+    }
+
+    /**
+     * Set partialLoading
+     *
+     * @param boolean $partialLoading
+     * @return Affiliate
+     */
+    public function setPartialLoading($partialLoading)
+    {
+        $this->partialLoading = $partialLoading;
+    
+        return $this;
+    }
+
+    /**
+     * Get partialLoading
+     *
+     * @return boolean 
+     */
+    public function getPartialLoading()
+    {
+        return $this->partialLoading;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isPartialLoading()
+    {
+        return $this->partialLoading;
+    }
+
+    /**
+     * Set needAuth
+     *
+     * @param boolean $needAuth
+     * @return Affiliate
+     */
+    public function setNeedAuth($needAuth)
+    {
+        $this->needAuth = $needAuth;
+    
+        return $this;
+    }
+
+    /**
+     * Get needAuth
+     *
+     * @return boolean 
+     */
+    public function getNeedAuth()
+    {
+        return $this->needAuth;
     }
 }

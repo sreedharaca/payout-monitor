@@ -1,6 +1,6 @@
 services:
 
-    LogService:
+    EventLogService:
         class: Katana\LogBundle\Service\LogService
         arguments:
             entityManager: "@doctrine.orm.entity_manager"

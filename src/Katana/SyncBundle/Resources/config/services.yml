@@ -22,3 +22,19 @@ services:
     CurlService:
         class: Katana\SyncBundle\Service\CurlService
         arguments: ['@service_container']
+
+    AffiliateDataLoader:
+        class: Katana\SyncBundle\Service\AffiliateDataLoader
+        arguments: ['@service_container']
+
+    OfferFactory:
+        class: Katana\SyncBundle\Service\OfferFactory
+        arguments: ['@service_container']
+
+    AffiliateAuthManager:
+        class: Katana\SyncBundle\Service\AffiliateAuthManager
+        arguments: ['@service_container']
+
+    RedirectUrlFinderManager:
+        class: Katana\SyncBundle\Service\FinderManager\RedirectUrlFinderManager
+        arguments: ['@service_container']

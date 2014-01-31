@@ -2,32 +2,20 @@
 
 namespace Katana\JsonParserBundle\Service;
 
+use Katana\AffiliateBundle\Lib\AffiliateDictionary;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Katana\JsonParserBundle\Parser\HasoffersBaseJsonParser;
 use Katana\JsonParserBundle\Parser\Hasoffers2BaseJsonParser;
-use Katana\JsonParserBundle\Parser\YeahmobiJsonParser;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Katana\JsonParserBundle\Parser\KatanaJsonParser;
 use Katana\JsonParserBundle\Parser\Ad4gameJsonParser;
-use Katana\JsonParserBundle\Parser\UnicumeJsonParser;
 use Katana\JsonParserBundle\Parser\ComboappJsonParser;
 use Katana\JsonParserBundle\Parser\MobilePartnerJsonParser;
+use Katana\JsonParserBundle\Parser\GlispaParser;
+use Katana\JsonParserBundle\Parser\ClicksmobParser;
+use Katana\JsonParserBundle\Parser\IquconnectParser;
+use Katana\JsonParserBundle\Parser\ClickkyParser;
 
-
-class JsonParserManager
+class ParserManager extends AffiliateDictionary
 {
-    const PROVIDER_ADSUP     = 'Adsup';
-    const PROVIDER_KATANA    = 'Katana';
-    const PROVIDER_AD4GAME   = 'Ad4game';
-    const PROVIDER_UNICUME   = 'Unicume';
-    const PROVIDER_YEAHMOBI  = 'Yeahmobi';
-    const PROVIDER_COMBOAPP  = 'Comboapp';
-    const PROVIDER_ICONPEAK  = 'Iconpeak';
-    const PROVIDER_KISSMYADS = 'Kissmyads';
-    const PROVIDER_TAPGERINE = 'Tapgerine';
-    const PROVIDER_MOBPARTNER= 'MobPartKat';
-
-    //TODO добавить все сетки
-
     protected $container;
 
     public function __construct(ContainerInterface $container)
@@ -79,8 +67,32 @@ class JsonParserManager
                 return new MobilePartnerJsonParser($this->container);
                 break;
 
+            case self::PROVIDER_GLISPA:
+                return new GlispaParser($this->container);
+                break;
+
+            case self::PROVIDER_CLICKROCKET:
+                return new HasoffersBaseJsonParser($this->container);
+                break;
+
+            case self::PROVIDER_CLICKSMOB:
+                return new ClicksmobParser($this->container);
+                break;
+
+            case self::PROVIDER_IQUCONNECT:
+                return new IquconnectParser($this->container);
+                break;
+
+            case self::PROVIDER_MOTIVE:
+                return new IquconnectParser($this->container);
+                break;
+
+            case self::PROVIDER_CLICKKY:
+                return new ClickkyParser($this->container);
+                break;
+
             default:
-                return null;
+                throw new \Exception("Requested unknown Affiliate Parser: $provider");
         }
     }
 }

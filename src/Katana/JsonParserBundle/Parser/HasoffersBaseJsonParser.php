@@ -2,9 +2,9 @@
 
 namespace Katana\JsonParserBundle\Parser;
 
-use Katana\JsonParserBundle\Parser\BaseJsonParser;
+use Katana\JsonParserBundle\Parser\BaseParser;
 
-class HasoffersBaseJsonParser extends BaseJsonParser
+class HasoffersBaseJsonParser extends BaseParser
 {
 
     /***
@@ -13,8 +13,6 @@ class HasoffersBaseJsonParser extends BaseJsonParser
      */
     public function parse( $json = null )
     {
-        echo "Hasoffers base parser executed\n";
-
         if(!$json){ $json = $this->json; }
 
         $array = json_decode($json, true);
@@ -29,7 +27,7 @@ class HasoffersBaseJsonParser extends BaseJsonParser
             $row['name'] = strval($offer['name']);
             $row['payout'] = floatval($offer['payout']);
             $row['preview_url'] = $offer['preview_url'];
-            $row['json'] = json_encode($offer);
+//            $row['json'] = json_encode($offer);
             /***
              * Страны
              */

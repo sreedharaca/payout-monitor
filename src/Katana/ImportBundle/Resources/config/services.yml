@@ -1,0 +1,9 @@
+
+services:
+    importer:
+        class: Katana\ImportBundle\Service\Importer
+        arguments: ['@service_container']
+
+    test:
+        class: Katana\ImportBundle\Service\Test
+        arguments: ['@service_container']

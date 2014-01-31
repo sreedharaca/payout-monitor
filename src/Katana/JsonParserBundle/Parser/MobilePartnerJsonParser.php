@@ -2,15 +2,13 @@
 
 namespace Katana\JsonParserBundle\Parser;
 
-use Katana\JsonParserBundle\Parser\BaseJsonParser;
+use Katana\JsonParserBundle\Parser\BaseParser;
 
-class MobilePartnerJsonParser extends BaseJsonParser
+class MobilePartnerJsonParser extends BaseParser
 {
 
     public function parse( $json = null )
     {
-        echo "Mobile Partner base parser executed\n";
-
         if(!$json){ $json = $this->json; }
 
         $array = json_decode($json, true);

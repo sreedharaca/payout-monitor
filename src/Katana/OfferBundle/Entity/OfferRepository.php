@@ -168,10 +168,11 @@ class OfferRepository extends EntityRepository
 
     public function getNoneApps(){
         $qb = $this->createQueryBuilder('offer')
-            ->select('offer, d, c')
+            ->select('offer, d, c, p')
             ->leftJoin('offer.devices', 'd')
             ->leftJoin('offer.countries', 'c')
-            ->where("offer.app is NULL")
+            ->leftJoin('offer.platform', 'p')
+            ->where("NOT (offer.app > 0)")
             ->andWhere("offer.deleted = 0")
 //            ->andWhere("offer.active = 1")
         ;
@@ -179,8 +180,8 @@ class OfferRepository extends EntityRepository
         return $qb->getQuery()->execute();
     }
 
-    public function batchDeactivate($ids, $Affiliate){
-
+    public function batchDeactivate($ids, $Affiliate)
+    {
         if( ! count($ids) ){
             return false;
         }
@@ -189,21 +190,12 @@ class OfferRepository extends EntityRepository
             ->update('Katana\OfferBundle\Entity\Offer', 'o') //$this->getClassName()
             ->set('o.active', 0)
             ->set('o.deleted', 1)
-//            ->set('h.updatedBy', $this->user->getId())
             ->where('o.external_id IN (:ids)')
             ->andWhere('o.affiliate = (:affiliate)')
             ->setParameter('ids', $ids)
             ->setParameter('affiliate', $Affiliate)
             ->getQuery()->execute()
         ;
-
-//        $qb = $this->createQueryBuilder('KatanaOfferBundle:Offer');
-//        $qb->update('KatanaOfferBundle:Offer o')
-//            ->set('o.active', 0)
-//            ->where('o.id IN (:ids)')
-//            ->setParameter('ids', $ids)
-//            ;
-//        return $qb->getQuery()->execute();
     }
 
 

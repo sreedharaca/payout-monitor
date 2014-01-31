@@ -3,9 +3,10 @@
 namespace Katana\SyncBundle\Service;
 
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
+use Katana\AffiliateBundle\Entity\Affiliate;
 use Katana\SyncBundle\Lib\Curl\UrlResolver;
 use Katana\SyncBundle\Lib\Curl\MetaRedirFinder;
-
+use Katana\SyncBundle\Service\FinderManager\RedirectUrlFinderManager;
 
 class CurlService
 {
@@ -16,11 +17,14 @@ class CurlService
     }
 
 
-    public function catchRedirectUrl($startUrl)
+    public function catchRedirectUrl(Affiliate $Affiliate, $startUrl)
     {
         $resolver = new UrlResolver();
 
-        $resolver->addFinder(new MetaRedirFinder());
+        $FinderManager = $this->container->get('RedirectUrlFinderManager');
+        $Finder = $FinderManager->getFinder($Affiliate);
+
+        $resolver->addFinder($Finder);
 
         $options = array(
             CURLOPT_RETURNTRANSFER => true,     // return web page

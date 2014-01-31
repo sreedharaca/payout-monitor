@@ -18,7 +18,13 @@ class AffiliateType extends AbstractType
             ->add('name')
             ->add('apiUrl')
             ->add('offerUrl')
+            ->add('partialLoading', 'checkbox', array(
+                'required' => false
+            ))
             ->add('active', 'checkbox', array(
+                'required' => false
+            ))
+            ->add('needAuth', 'checkbox', array(
                 'required' => false
             ))
         ;

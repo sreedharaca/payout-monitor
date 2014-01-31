@@ -2,9 +2,9 @@
 
 namespace Katana\JsonParserBundle\Parser;
 
-use Katana\JsonParserBundle\Parser\BaseJsonParser;
+use Katana\JsonParserBundle\Parser\BaseParser;
 
-class ComboappJsonParser extends BaseJsonParser
+class ComboappJsonParser extends BaseParser
 {
 
     //private $json = '"532":{"Offer":{"id":"532","name":"BINGO Blitz - iPhone\/iPad US\/CA\/AU - non incent","description":"","require_approval":"0","require_terms_and_conditions":0,"terms_and_conditions":null,"preview_url":"https:\/\/itunes.apple.com\/us\/app\/bingo-blitz-free-bingo-+-slots\/id529996768?mt=8","currency":null,"default_payout":"2.00","status":"active","expiration_date":"2014-10-31","payout_type":"cpa_flat","percent_payout":null,"featured":null,"allow_website_links":"0","allow_direct_links":"0","show_custom_variables":"0","show_mail_list":"0","dne_list_id":"0","email_instructions":"0","email_instructions_from":"","email_instructions_subject":"","use_target_rules":"0","is_expired":"0","dne_download_url":null,"dne_unsubscribe_url":null}}';
@@ -19,8 +19,6 @@ class ComboappJsonParser extends BaseJsonParser
      */
     public function parse( $json = null )
     {
-        echo "Comboapp parser executed\n";
-
 
         $array = json_decode($json, true);
 

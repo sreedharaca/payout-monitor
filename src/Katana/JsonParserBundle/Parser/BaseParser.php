@@ -5,7 +5,7 @@ namespace Katana\JsonParserBundle\Parser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 
-class BaseJsonParser{
+class BaseParser{
 
     protected $container;
 

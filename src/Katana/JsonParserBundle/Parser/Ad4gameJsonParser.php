@@ -2,16 +2,14 @@
 
 namespace Katana\JsonParserBundle\Parser;
 
-use Katana\JsonParserBundle\Parser\BaseJsonParser;
+use Katana\JsonParserBundle\Parser\BaseParser;
 
-class Ad4gameJsonParser extends BaseJsonParser {
+class Ad4gameJsonParser extends BaseParser {
 
 //    private $json = '"28":{"OfferId":"28","OfferName":"Conquer Online","Platform":"Display","DailyCap":"None","PreviewUrl":"http:\/\/co.91.com\/","PreviewImage":"http:\/\/cdn.ad4game.com\/1a7ed3a45cbff9f5d3fae4f0cc32091c.jpg","TrackingUrl":"http:\/\/ads.ad4game.com\/www\/delivery\/dck.php?offerid=28&zoneid=33039","Description":"Create your character, gather your allies, and unite against evildoers. Come and start your mythological journey now!","RestrictedTraffic":" Social traffic (facebook, etc), Social traffic (facebook, etc) Email MarketingM, Brand Bidding","Restrictions":"Single Opt-In (SOI)\r\nAllowed Traffic:\r\nAbsolutely no Incentivization\r\nNo Search\r\nNo Co-Reg\r\nNo Facebook Traffic","countries":[{"CountryName":"SA","OptIn":"SOI","endDate":"2013-12-27 16:50:47","Rate":"0.32"}]}';
 
     public function parse( $json = null )
     {
-        echo "Ad4game parser executed\n";
-
 //        if(!$json){ $json = $this->json; }
 
         $array = json_decode($json, true);

@@ -17,13 +17,20 @@ class OffersUpdateCommand extends ContainerAwareCommand
         $this
             ->setName('offers:update')
             ->setDescription('offers update')
+            ->addArgument(
+                'affiliate_id',
+                InputArgument::OPTIONAL,
+                'Affiliate id'
+            )
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $affiliate_id = $input->getArgument('affiliate_id');
+
         $UO = $this->getContainer()->get('offers_update');
-        $UO->updateOffers();
+        $UO->updateOffers($affiliate_id);
     }
 
 

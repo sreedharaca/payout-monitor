@@ -1,0 +1,162 @@
+<?php
+
+namespace Katana\AffiliateBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * RawData
+ *
+ * @ORM\Table(name="raw_data")
+ * @ORM\Entity(repositoryClass="Katana\AffiliateBundle\Entity\RawDataRepository")
+ * @ORM\HasLifecycleCallbacks
+ */
+class RawData
+{
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="data", type="text")
+     */
+    private $data;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created", type="datetime")
+     */
+    private $created;
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="session_id", type="integer", nullable=true)
+     */
+    private $sessionId;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Affiliate", inversedBy="rawData", cascade={"persist"})
+     * @ORM\JoinColumn(name="affiliate_id", referencedColumnName="id", nullable=false)
+     */
+    private $affiliate;
+
+
+    /**
+     * @ORM\PrePersist
+     */
+    public function prePersist()
+    {
+        $this->created = new \DateTime();
+    }
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set data
+     *
+     * @param string $data
+     * @return RawData
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+    
+        return $this;
+    }
+
+    /**
+     * Get data
+     *
+     * @return string 
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * Set created
+     *
+     * @param \DateTime $created
+     * @return RawData
+     */
+    public function setCreated($created)
+    {
+        $this->created = $created;
+    
+        return $this;
+    }
+
+    /**
+     * Get created
+     *
+     * @return \DateTime 
+     */
+    public function getCreated()
+    {
+        return $this->created;
+    }
+
+    /**
+     * Set sessionId
+     *
+     * @param integer $sessionId
+     * @return RawData
+     */
+    public function setSessionId($sessionId)
+    {
+        $this->sessionId = $sessionId;
+    
+        return $this;
+    }
+
+    /**
+     * Get sessionId
+     *
+     * @return integer 
+     */
+    public function getSessionId()
+    {
+        return $this->sessionId;
+    }
+
+    /**
+     * Set affiliate
+     *
+     * @param \Katana\AffiliateBundle\Entity\Affiliate $affiliate
+     * @return RawData
+     */
+    public function setAffiliate(\Katana\AffiliateBundle\Entity\Affiliate $affiliate = null)
+    {
+        $this->affiliate = $affiliate;
+    
+        return $this;
+    }
+
+    /**
+     * Get affiliate
+     *
+     * @return \Katana\AffiliateBundle\Entity\Affiliate 
+     */
+    public function getAffiliate()
+    {
+        return $this->affiliate;
+    }
+}

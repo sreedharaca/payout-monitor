@@ -1,6 +1,6 @@
 <?php
 
-namespace Katana\SyncBundle\Tests\Controller;
+namespace Katana\SyncBundle\Tests\Lib;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Katana\SyncBundle\Lib\Curl\MetaRedirFinder;
@@ -8,7 +8,7 @@ use Katana\SyncBundle\Lib\Curl\JsRedirFinder;
 use Katana\SyncBundle\Lib\Curl\Curl;
 use Katana\SyncBundle\Lib\Curl\UrlResolver;
 
-class UrlControllerTest extends WebTestCase
+class UrlResolverTest extends WebTestCase
 {
 
     public function testMetaRedirFinder()
@@ -81,38 +81,38 @@ class UrlControllerTest extends WebTestCase
         $this->assertTrue($url == $curl->getEffectiveUrl(), '**Getting Effective Url');
     }
 
-    public function testResolveFinalUrl()
-    {
-        $startUrl = 'http://c.mobpartner.mobi/?s=559571';
-        $finalUrl = "itunes.apple.com/";
-
-        $resolver = new UrlResolver();
-
-        $resolver->addFinder(new MetaRedirFinder());
-
-        $options = array(
-            CURLOPT_RETURNTRANSFER => true,     // return web page
-            CURLOPT_HEADER         => false,    // return headers
-            CURLOPT_FOLLOWLOCATION => true,     // follow redirects
-            CURLOPT_ENCODING       => "",       // handle all encodings
-            CURLOPT_USERAGENT      => "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1", // who am i
-            CURLOPT_AUTOREFERER    => true,     // set referer on redirect
-            CURLOPT_CONNECTTIMEOUT => 120,      // timeout on connect
-            CURLOPT_TIMEOUT        => 120,      // timeout on response
-            CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-            CURLOPT_NOBODY         => false,       // stop after 10 redirects
-            //CURLOPT_HTTPHEADER      => array("Content-Type:application/x-www-form-urlencoded"),
-            //CURLOPT_COOKIEJAR      => 'cookies.txt',
-            //CURLOPT_COOKIEFILE     => 'cookies.txt',
-            CURLOPT_SSLVERSION     => 3,
-            CURLOPT_SSL_VERIFYPEER => false
-        );
-
-        $resolver->setCurlOptions($options);
-
-        $fUrl = $resolver->getFinalUrl($startUrl);
-
-
-        $this->assertTrue(strpos($fUrl, $finalUrl) !== false, 'Resolving final url' );
-    }
+//    public function testResolveFinalUrl()
+//    {
+//        $startUrl = 'http://c.mobpartner.mobi/?s=559571';
+//        $finalUrl = "itunes.apple.com/";
+//
+//        $resolver = new UrlResolver();
+//
+//        $resolver->addFinder(new MetaRedirFinder());
+//
+//        $options = array(
+//            CURLOPT_RETURNTRANSFER => true,     // return web page
+//            CURLOPT_HEADER         => false,    // return headers
+//            CURLOPT_FOLLOWLOCATION => true,     // follow redirects
+//            CURLOPT_ENCODING       => "",       // handle all encodings
+//            CURLOPT_USERAGENT      => "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1", // who am i
+//            CURLOPT_AUTOREFERER    => true,     // set referer on redirect
+//            CURLOPT_CONNECTTIMEOUT => 120,      // timeout on connect
+//            CURLOPT_TIMEOUT        => 120,      // timeout on response
+//            CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
+//            CURLOPT_NOBODY         => false,       // stop after 10 redirects
+//            //CURLOPT_HTTPHEADER      => array("Content-Type:application/x-www-form-urlencoded"),
+//            //CURLOPT_COOKIEJAR      => 'cookies.txt',
+//            //CURLOPT_COOKIEFILE     => 'cookies.txt',
+//            CURLOPT_SSLVERSION     => 3,
+//            CURLOPT_SSL_VERIFYPEER => false
+//        );
+//
+//        $resolver->setCurlOptions($options);
+//
+//        $fUrl = $resolver->getFinalUrl($startUrl);
+//
+//
+//        $this->assertTrue(strpos($fUrl, $finalUrl) !== false, 'Resolving final url' );
+//    }
 }

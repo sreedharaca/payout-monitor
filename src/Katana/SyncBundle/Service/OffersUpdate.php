@@ -3,6 +3,7 @@
 namespace Katana\SyncBundle\Service;
 
 use Katana\AffiliateBundle\Entity\AffiliateJson;
+use Katana\AffiliateBundle\Entity\RawData;
 use Katana\DictionaryBundle\Entity\Platform;
 use Katana\OfferBundle\KatanaOfferBundle;
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
@@ -19,239 +20,209 @@ class OffersUpdate
 
     public function __construct(Container $container)
     {
-        set_time_limit(0);
+        set_time_limit(55*60); //55mins
         ini_set('memory_limit','256M');
+        error_reporting(E_ALL);
 
         $this->container = $container;
     }
 
-    //TODO сделать обновление данных по шагам с логами
-    //TODO чтобы ничего не ломалось, если что то сломалось пишем логи. Общий try catch
     /***
      * Task: Загрузить json данные из api в базу
      *
      * I
      */
-    public function jsonApiToDb()
+    public function jsonApiToDb($affiliate_id = null)
     {
         $em = $this->container->get('doctrine')->getManager();
 
         $CronLog = $this->container->get('CronLogService');
+        $Loader = $this->container->get('AffiliateDataLoader');
+        $AuthenticateManager = $this->container->get('AffiliateAuthManager');
 
-        $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+
+        /*** Очищаем старые данные */
+        $RawData = $em->getRepository('KatanaAffiliateBundle:RawData')->findAll();
+        foreach($RawData as $entity)
+        {
+            $em->remove($entity);
+        }
+        $em->flush();
+
+
+
+        //если в командной строке введен айди сетки
+        if($affiliate_id){
+            $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findById(intval($affiliate_id));
+
+            if(!count($Affiliates)){
+                echo "Такой сетки не найдено!\n";
+                exit;
+            }
+        }
+        //достаем все сетки
+        else{
+            $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+        }
 
         foreach($Affiliates as $Affiliate)
         {
-            $Affiliate->truncateJson();
+            if($Affiliate->isNeededAuth()){
+                echo "Authenticating... ";
 
-            $url = $Affiliate->getApiUrl();
+                $Authenticator = $AuthenticateManager->getAffiliateAuthenticator($Affiliate);
+                $res = $Authenticator->authenticate($Affiliate);
 
-            try {
-                /*** API request */
-                $json = $this->requestApi($url, $decode = false);
-            }
-            catch(\Exception $e){
-                echo $e->getMessage(); //"Произошла ошибка при запросе данных через API Партнера: {$Affiliate->getName()}\n";
-                $CronLog->save('LOAD API JSON', $e->getMessage());
-                continue;  //TODO вести логи импорта данных
-            }
+                if(!$res){
+                    echo "failed authentication {$Affiliate->getName()}\n";
+                    continue;
+                }
 
-            if(empty($json)){
-                echo "EMPTY json from {$Affiliate->getName()}:  \n";
-
-                $CronLog->save('LOAD API JSON', "EMPTY json from {$Affiliate->getName()}:  \n");
-
-                continue;
+                echo "ok.\n";
             }
 
-            $Affiliate->setJson($json);
+            $RawDataCollection = $Loader->load($Affiliate);
+
+//            if($Loader->hasErrors())
+//            {
+//                $errors = $Loader->getErrors();
+//
+//                $error_str = '';
+//                foreach($errors as $error)
+//                {
+//                    $error_str .= $error . '!'; //->getMessage()
+//                }
+//
+//                $CronLog->save('LOAD API JSON', $error_str);
+//            }
+
+            foreach($RawDataCollection as $RawData){
+
+                $Affiliate->addRawData($RawData);
+                $em->persist($RawData);
+
+                echo "{$Affiliate->getName()}: got " . round(strlen($RawData->getData())/1024) . " Kbytes\n";
+                $CronLog->save('LOAD API JSON', "{$Affiliate->getName()}: got " . round(strlen($RawData->getData())/1024) . " Kbytes \n");
+            }
 
             $em->flush();
 
-            echo "{$Affiliate->getName()}: got " . ((int)(strlen($json)/1024)) . " Kbytes\n";
-
-            $CronLog->save('LOAD API JSON', "{$Affiliate->getName()}: got " . ((int)(strlen($json)/1024)) . " Kbytes \n");
+//            try {
+//                /** API request */
+//                $rawData = $this->requestApi($url, $decode = false);
+//            }
+//            catch(\Exception $e){
+//                echo $e->getMessage(); //"Произошла ошибка при запросе данных через API Партнера: {$Affiliate->getName()}\n";
+//                $CronLog->save('LOAD API JSON', $e->getMessage());
+//                continue;
+//            }
         }
 
-        $em->clear();
+//        $em->clear();
     }
 
     /***
      * II.1
      */
-    public function updateOffers()
+    public function updateOffers($affiliate_id = null)
     {
         $em = $this->container->get('doctrine')->getManager();
 
         $CronLog = $this->container->get('CronLogService');
-        $Log = $this->container->get('LogService');
+        $EventLog = $this->container->get('EventLogService');
 
-        //get all affiliates
-        $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+        $ParserManager = $this->container->get('parser_manager');
+//        $ParseValidator = $this->container->get();
+        $OfferFactory = $this->container->get('OfferFactory');
 
-        //loop affiliates
+
+        //если в командной строке введен айди сетки
+        if($affiliate_id){
+            $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findById(intval($affiliate_id));
+
+            if(!count($Affiliates)){
+                echo "Такой сетки не найдено!\n";
+                exit;
+            }
+        }
+        //достаем все сетки
+        else{
+            $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+        }
+
         foreach($Affiliates as $Affiliate)
         {
-            // reset the EM and all aias
-//            $this->container->set('doctrine.orm.entity_manager', null);
-//            $this->container->set('doctrine.orm.default_entity_manager', null);
-// get a fresh EM
-//            $em = $this->container->get('doctrine')->getManager();
 
             $total_rows = 0;
             $update_rows = 0;
             $new_rows = 0;
 
-            //get json data
-            $AffiliateJson = $Affiliate->getAffiliateJson();
-
-            if(empty($AffiliateJson)){
-                continue;
-            }
-
-            $json = $AffiliateJson->getJson();
-
-            if(empty($json)){
-                continue;
-            }
-
-            //parse json to array
-            $ParserManager = $this->container->get('json_parser_manager');
-            $Parser = $ParserManager->getParser($Affiliate->getName());
-            $data = $Parser->parse($json);
-
-            if(empty($data)){
-                echo "no Offers at " . $Affiliate->getName() . "\n";
-
-                $CronLog->save('UPDATE OFFERS', "no Offers at " . $Affiliate->getName() . "\n");
-
-                continue;
-            }
-//            var_dump($data);
-
             $i = 0;
-            //loop array
-            foreach($data as $row)
+
+            foreach($Affiliate->getRawData() as $RawData)
             {
-                $total_rows ++;
+                //парсим в массив
+                $Parser = $ParserManager->getParser( $RawData->getAffiliate()->getName() );
 
-                $Offer = $em->getRepository('KatanaOfferBundle:Offer')->findOneBy(
-                    array(
-                        'external_id' => $row['external_id'],
-                        'affiliate' => $Affiliate )
-                );
+                echo "{$RawData->getAffiliate()->getName()} parsing started.\n";
+                $parsedData = $Parser->parse( $RawData->getData() );
 
-                /*** UPDATE Offer*/
-                if( !empty($Offer) && is_object($Offer) )
+                foreach($parsedData as $row)
                 {
-                    $Offer->setName($row['name']);
+                    $total_rows ++;
 
-                    /***
-                     * Запись события изменения цены
-                     */
-                    if($Offer->getPayout() != $row['payout']){
-                        $Log->save(Log::ACTION_PAYOUT_CHANGE, "Было {$Offer->getPayout()} стало {$row['payout']}", $Offer);
-                    }
+                    //TODO validate row
+                    //if(! $ParseValidator->isValid($row))
 
-                    $Offer->setPayout($row['payout']);
-                    $Offer->setPreviewUrl($row['preview_url']); //TODO в базу пишется с заменами & => &amp;
-//                    $Offer->setJson($row['json']);
-                    $Offer->setActive(true);
-                    $Offer->setDeleted(false);
-                    $Offer->setJson(null);
+                    $Offer = $em->getRepository('KatanaOfferBundle:Offer')->findOneBy(
+                        array(
+                            'external_id' => $row['external_id'],
+                            'affiliate' => $RawData->getAffiliate() )
+                    );
 
-//                    if(!empty($row['platform']) && is_object($row['platform'])){
-//                        $Offer->setPlatform($row['platform']);
-//                    }
-
-                    /***
-                     * Update devices
-                     */
-                    $Devices = $em->getRepository('KatanaDictionaryBundle:Device')->findByOffer($Offer);
-
-                    //remove old devices from offer
-                    foreach($Offer->getDevices() as $device){
-//                        $device->removeOffer($Offer);
-                        $Offer->removeDevice($device);
-                    }
-
-                    //add new devices to offer
-                    foreach($row['devices'] as $device){
-//echo "adding new device #{$device->getId()} to offer #{$Offer->getId()} \n";
-                        $Offer->addDevice($device);
-                    }
-
-
-                    /***
-                     * Update countries
-                     */
-//                    $Countries = $em->getRepository('KatanaDictionaryBundle:Country')->findByOffer($Offer);
-
-                    //remove old countries from offer
-//                    foreach($Countries as $country){
-                    foreach($Offer->getCountries() as $country){
-//echo "Remove Offer #{$Offer->getId()} from Country #{$country->getId()} \n";
-//                        $country->removeOffer($Offer);
-                        $Offer->removeCountrie($country);
-                    }
-
-                    //add new countries to offer
-                    foreach($row['countries'] as $country){
-//echo "Add Country #{$country->getId()} to Offer #{$Offer->getId()} \n";
-                        $Offer->addCountrie($country);
-                    }
-
-                    $update_rows++;
-                }
-                /** INSERT offer */
-                else
-                {
-                    $Offer = new Offer();
-                    $Offer->setName($row['name']);
-                    $Offer->setExternalId($row['external_id']);
-                    $Offer->setAffiliate($Affiliate);
-                    $Offer->setPayout($row['payout']);
-                    $Offer->setPreviewUrl($row['preview_url']);
-                    $Offer->setActive(true);
-                    $Offer->setDeleted(false);
-//                    $Offer->setJson($row['json']);
-                    $Offer->setJson(null);
-
-
-//                    if(!empty($row['platform']) && is_object($row['platform'])){
-//                        $Offer->setPlatform($row['platform']);
-//                    }
-
-                    /***
-                     * Add devices
-                     */
-                    foreach($row['devices'] as $device)
+                    if($Offer instanceof Offer)
                     {
-                        $Offer->addDevice($device);
-                    }
+                        $changes = $OfferFactory->updateFromArray($Offer, $row);
 
-                    /***
-                     * Add countries
-                     */
-                    foreach($row['countries'] as $country)
+                        if(isset($changes['payout'])){
+                            $EventLog->save(Log::ACTION_PAYOUT_CHANGE, "Было {$changes['payout']['old']} стало {$changes['payout']['new']}", $Offer);
+                        }
+
+                        //если оффер восстановлен из удаленных
+                        if(isset($changes['deleted']) && $changes['deleted']['old'] == true){
+                            $EventLog->save(Log::ACTION_NEW, '', $Offer);
+                            $new_rows++;
+                        }
+
+
+                        if(count($changes)){
+                            echo json_encode($changes)."\n";
+                            $update_rows++;
+                        }
+                    }
+                    else
                     {
-                        $Offer->addCountrie($country);
+                        $row['affiliate'] = $RawData->getAffiliate();
+
+                        $newOffer = $OfferFactory->createFromArray($row);
+
+                        $em->persist($newOffer);
+
+                        $EventLog->save(Log::ACTION_NEW, '', $newOffer);
+
+                        $new_rows++;
                     }
 
-                    $em->persist($Offer);
-//                    $em->flush();
+                    $i++;
 
-                    $Log->save(Log::ACTION_NEW, '', $Offer);
+//echo "$total_rows\n";
 
-                    $new_rows++;
-                }
+                    if($i % 100 == 0){
+                        $em->flush();
+                    }
+                }//end: parsedData loop
+            }//end: RawDataCollection loop
 
-                $i++;
-
-                if($i % 100 == 0){
-                    $em->flush();
-                }
-            }
             $em->flush();
 
             ob_start();
@@ -264,9 +235,194 @@ class OffersUpdate
             ob_end_flush();
 
             $CronLog->save('UPDATE OFFERS', "{$Affiliate->getName()}: Всего офферов: $total_rows. Обновлено офферов: $update_rows. Новых офферов: $new_rows.");
-        }//end: loop Affiliates
+        }//end: Affiliate loop
 
-        $em->clear();
+
+
+
+
+//        $em = $this->container->get('doctrine')->getManager();
+//
+//        $CronLog = $this->container->get('CronLogService');
+//        $EventLog = $this->container->get('EventLogService');
+//
+//        //get all affiliates
+//        $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+//
+//        //loop affiliates
+//        foreach($Affiliates as $Affiliate)
+//        {
+//            // reset the EM and all aias
+////            $this->container->set('doctrine.orm.entity_manager', null);
+////            $this->container->set('doctrine.orm.default_entity_manager', null);
+//// get a fresh EM
+////            $em = $this->container->get('doctrine')->getManager();
+//
+//            $total_rows = 0;
+//            $update_rows = 0;
+//            $new_rows = 0;
+//
+//            //get json data
+//            $AffiliateJson = $Affiliate->getAffiliateJson();
+//
+//            if(empty($AffiliateJson)){
+//                continue;
+//            }
+//
+//            $json = $AffiliateJson->getJson();
+//
+//            if(empty($json)){
+//                continue;
+//            }
+//
+//            //parse json to array
+//            $ParserManager = $this->container->get('parser_manager');
+//            $Parser = $ParserManager->getParser($Affiliate->getName());
+//            $data = $Parser->parse($json);
+//
+//            if(empty($data)){
+//                echo "no Offers at " . $Affiliate->getName() . "\n";
+//
+//                $CronLog->save('UPDATE OFFERS', "no Offers at " . $Affiliate->getName() . "\n");
+//
+//                continue;
+//            }
+////            var_dump($data);
+//
+//            $i = 0;
+//            //loop array
+//            foreach($data as $row)
+//            {
+//                $total_rows ++;
+//
+//                $Offer = $em->getRepository('KatanaOfferBundle:Offer')->findOneBy(
+//                    array(
+//                        'external_id' => $row['external_id'],
+//                        'affiliate' => $Affiliate )
+//                );
+//
+//                /*** UPDATE Offer*/
+//                if( !empty($Offer) && is_object($Offer) )
+//                {
+//                    $Offer->setName($row['name']);
+//
+//                    /***
+//                     * Запись события изменения цены
+//                     */
+//                    if($Offer->getPayout() != $row['payout']){
+//                        $EventLog->save(Log::ACTION_PAYOUT_CHANGE, "Было {$Offer->getPayout()} стало {$row['payout']}", $Offer);
+//                    }
+//
+//                    $Offer->setPayout($row['payout']);
+//                    $Offer->setPreviewUrl($row['preview_url']); //TODO в базу пишется с заменами & => &amp;
+////                    $Offer->setJson($row['json']);
+//                    $Offer->setActive(true);
+//                    $Offer->setDeleted(false);
+//                    $Offer->setJson(null);
+//
+////                    if(!empty($row['platform']) && is_object($row['platform'])){
+////                        $Offer->setPlatform($row['platform']);
+////                    }
+//
+//                    /***
+//                     * Update devices
+//                     */
+//                    $Devices = $em->getRepository('KatanaDictionaryBundle:Device')->findByOffer($Offer);
+//
+//                    //remove old devices from offer
+//                    foreach($Offer->getDevices() as $device){
+////                        $device->removeOffer($Offer);
+//                        $Offer->removeDevice($device);
+//                    }
+//
+//                    //add new devices to offer
+//                    foreach($row['devices'] as $device){
+////echo "adding new device #{$device->getId()} to offer #{$Offer->getId()} \n";
+//                        $Offer->addDevice($device);
+//                    }
+//
+//
+//                    /***
+//                     * Update countries
+//                     */
+////                    $Countries = $em->getRepository('KatanaDictionaryBundle:Country')->findByOffer($Offer);
+//
+//                    //remove old countries from offer
+//                    foreach($Offer->getCountries() as $country){
+//                        $Offer->removeCountrie($country);
+//                    }
+//
+//                    //add new countries to offer
+//                    foreach($row['countries'] as $country){
+//                        $Offer->addCountrie($country);
+//                    }
+//
+//                    $update_rows++;
+//                }
+//                /** INSERT offer */
+//                else
+//                {
+//                    $Offer = new Offer();
+//                    $Offer->setName($row['name']);
+//                    $Offer->setExternalId($row['external_id']);
+//                    $Offer->setAffiliate($Affiliate);
+//                    $Offer->setPayout($row['payout']);
+//                    $Offer->setPreviewUrl($row['preview_url']);
+//                    $Offer->setActive(true);
+//                    $Offer->setDeleted(false);
+////                    $Offer->setJson($row['json']);
+//                    $Offer->setJson(null);
+//
+//
+////                    if(!empty($row['platform']) && is_object($row['platform'])){
+////                        $Offer->setPlatform($row['platform']);
+////                    }
+//
+//                    /***
+//                     * Add devices
+//                     */
+//                    foreach($row['devices'] as $device)
+//                    {
+//                        $Offer->addDevice($device);
+//                    }
+//
+//                    /***
+//                     * Add countries
+//                     */
+//                    foreach($row['countries'] as $country)
+//                    {
+//                        $Offer->addCountrie($country);
+//                    }
+//
+//                    $em->persist($Offer);
+////                    $em->flush();
+//
+//                    $EventLog->save(Log::ACTION_NEW, '', $Offer);
+//
+//                    $new_rows++;
+//                }
+//
+//                $i++;
+//
+//                if($i % 100 == 0){
+//                    $em->flush();
+//                }
+//            }
+//            $em->flush();
+//
+//            ob_start();
+//            echo "-----------------------\n";
+//            echo "{$Affiliate->getName()}:\n";
+//            echo "Всего офферов: $total_rows \n";
+//            echo "Обновлено офферов: $update_rows \n";
+//            echo "Новых офферов: $new_rows \n";
+//            echo "=======================\n\n";
+//            ob_end_flush();
+//
+//            $CronLog->save('UPDATE OFFERS', "{$Affiliate->getName()}: Всего офферов: $total_rows. Обновлено офферов: $update_rows. Новых офферов: $new_rows.");
+//        }//end: loop Affiliates
+//
+//        $em->clear();
         //Log->save('Offer','updated', 'updated Offer #id')
         //Log->save('Offer','created', 'created Offer #id')
     }
@@ -279,77 +435,140 @@ class OffersUpdate
         $em = $this->container->get('doctrine')->getManager();
 
         $CronLog = $this->container->get('CronLogService');
-        $Log = $this->container->get('LogService');
+        $EventLog = $this->container->get('EventLogService');
+
+        $ParserManager = $this->container->get('parser_manager');
 
         $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
 
         foreach($Affiliates as $Affiliate)
         {
-echo "Processing {$Affiliate->getName()} \n";
-            //get json data
-            $AffiliateJson = $Affiliate->getAffiliateJson();
+            echo "Removing {$Affiliate->getName()} offers.\n";
 
-            if(empty($AffiliateJson)){
-                continue;
-            }
-
-            $json = $AffiliateJson->getJson();
-
-            if(empty($json)){
-                continue;
-            }
-
-//            parse json to array
-            $ParserManager = $this->container->get('json_parser_manager');
-            $Parser = $ParserManager->getParser($Affiliate->getName());
-            $data = $Parser->parse($json);
-
-            if(empty($data)){
-                continue;
-            }
-
+            //Collect New Offers IDS
             $api_external_ids = array();
 
-            foreach($data as $row){
-                $api_external_ids[] = $row['external_id'];
-            }
-            $data = null;
-//echo "api ids: " . implode(',', $api_external_ids) . "\n";
+            $Parser = $ParserManager->getParser( $Affiliate->getName() );
 
+            foreach($Affiliate->getRawData() as $RawData)
+            {
+                //парсим в массив
+                echo "{$RawData->getAffiliate()->getName()} parsing started.\n";
+                $parsedData = $Parser->parse( $RawData->getData() );
+
+                foreach($parsedData as $row){
+                    $api_external_ids[] = $row['external_id'];
+                }
+
+            }
+            $parsedData = null; //unset
+
+            //Collect Old Offer IDS
             $db_external_ids = array();
 
             $affiliateOffers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('affiliate'=>$Affiliate, 'deleted'=>'0'));
             foreach($affiliateOffers as $offer){
                 $db_external_ids[] = $offer->getExternalId();
             }
-            $affiliateOffers = null;
-//echo "db ids: " . implode(',', $db_external_ids) . "\n";
+            $affiliateOffers = null; //unset
 
+            //Which offers to DELETE
             $stop_ids = array_diff($db_external_ids, $api_external_ids);
-echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
+            echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
 
-            $em->getRepository('KatanaOfferBundle:Offer')->batchDeactivate($stop_ids, $Affiliate);
 
+            /** LOGGING */
             if(count($stop_ids)){
                 /***
                  * Запись события Остановка оффера
                  */
                 foreach($stop_ids as $id){
                     $Offer = $em->getRepository('KatanaOfferBundle:Offer')->findOneBy(array('affiliate'=>$Affiliate, 'external_id'=>$id));
-                    /*** Если оффер активен, то значит система узнала об удалении только что. Поэтому пишем событие. */
-                    if($Offer->getActive()){
-                        $Log->save(Log::ACTION_STOP, '', $Offer);
+                    /*** Если оффер не удален, то значит система узнала об удалении только что. Поэтому пишем событие. */
+                    if(!$Offer->getDeleted()){
+                        $EventLog->save(Log::ACTION_STOP, '', $Offer);
                     }
-
                 }
 
                 $CronLog->save('REMOVE OFFERS', "{$Affiliate->getName()}: Stop офферы: " . implode(', ', $stop_ids));
             }
 
+            /** Деактивируем офферы */
+            $em->getRepository('KatanaOfferBundle:Offer')->batchDeactivate($stop_ids, $Affiliate);
+
             $em->flush();
-            $em->clear();
         }
 
+        $em->clear();
+
+
+
+//        $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
+//
+//        foreach($Affiliates as $Affiliate)
+//        {
+
+            //get json data
+//            $AffiliateJson = $Affiliate->getAffiliateJson();
+
+//            if(empty($AffiliateJson)){
+//                continue;
+//            }
+
+//            $json = $AffiliateJson->getJson();
+
+//            if(empty($json)){
+//                continue;
+//            }
+
+//            parse json to array
+
+//            $Parser = $ParserManager->getParser($Affiliate->getName());
+//            $data = $Parser->parse($json);
+//
+//            if(empty($data)){
+//                continue;
+//            }
+//
+//            $api_external_ids = array();
+//
+//            foreach($data as $row){
+//                $api_external_ids[] = $row['external_id'];
+//            }
+//            $data = null;
+//
+//            $db_external_ids = array();
+//
+//            $affiliateOffers = $em->getRepository('KatanaOfferBundle:Offer')->findBy(array('affiliate'=>$Affiliate, 'deleted'=>'0'));
+//            foreach($affiliateOffers as $offer){
+//                $db_external_ids[] = $offer->getExternalId();
+//            }
+//            $affiliateOffers = null;
+//
+//            $stop_ids = array_diff($db_external_ids, $api_external_ids);
+//echo "stop ids: " . implode(',', $stop_ids) . "\n\n\n";
+//
+//            if(count($stop_ids)){
+//                /***
+//                 * Запись события Остановка оффера
+//                 */
+//                foreach($stop_ids as $id){
+//                    $Offer = $em->getRepository('KatanaOfferBundle:Offer')->findOneBy(array('affiliate'=>$Affiliate, 'external_id'=>$id));
+//                    /*** Если оффер не удален, то значит система узнала об удалении только что. Поэтому пишем событие. */
+//                    if(!$Offer->getDeleted()){
+//                        $Log->save(Log::ACTION_STOP, '', $Offer);
+//                    }
+//
+//                }
+//
+//                $CronLog->save('REMOVE OFFERS', "{$Affiliate->getName()}: Stop офферы: " . implode(', ', $stop_ids));
+//            }
+//
+//            $em->getRepository('KatanaOfferBundle:Offer')->batchDeactivate($stop_ids, $Affiliate);
+//
+//            $em->flush();
+//            $em->clear();
+//        }
 
     }
 
@@ -369,25 +588,27 @@ $i = 0;
                 $finalUrl = $offer->getPreviewUrl();
             }
             else {
-                $finalUrl = $Curl->catchRedirectUrl( str_replace('&amp;', '&', $offer->getPreviewUrl()) );
+                $finalUrl = $Curl->catchRedirectUrl( $offer->getAffiliate(), str_replace('&amp;', '&', $offer->getPreviewUrl()) );
             }
 
             if($finalUrl){
                 $offer->setFinalUrl($finalUrl);
             }
 
-//if($finalUrl != $offer->getPreviewUrl()){
-//    echo "  final: $finalUrl\npreview: {$offer->getPreviewUrl()}\n\n";
-//}
+if($finalUrl != $offer->getPreviewUrl()){
+    echo "{$offer->getAffiliate()->getName()} - final: $finalUrl\npreview: {$offer->getPreviewUrl()}\n\n";
+}
             $i++;
 //echo "$i/$total\n";
 
-            if($i % 100 == 0){
+            if($i % 30 == 0){
+                echo ($total - $i) . " remaining\n";
                 $em->flush();
             }
         }
 
         $em->flush();
+        $em->clear();
     }
 
     /***
@@ -403,7 +624,7 @@ $i = 0;
 
         $PlatformService = $this->container->get('PlatformService');
 
-//        $total = count($Offers);
+        $total = count($Offers);
         $i = 0;
 
         foreach($Offers as $Offer){
@@ -417,6 +638,7 @@ $i = 0;
             }
 
             if($i % 100 == 0){
+                echo ($total - $i) . " remaining\n";
                 $em->flush();
             }
 
@@ -425,6 +647,7 @@ $i = 0;
         }
 
         $em->flush();
+        $em->clear();
     }
 
 
@@ -489,7 +712,7 @@ $i = 0;
                 $new_apps++;
 
 
-                //если новая аппа появилась сразу пишем в базу
+                //если новая аппа появилась - сразу пишем в базу
                 //чтобы следующие по очереди офферы могли подвязаться к этой аппе
                 $em->flush();
             }
@@ -531,7 +754,7 @@ $i++;
         }
 
 
-//        $total = count($apps);
+        $total = count($apps);
         $i = 0;
 
         //LOAD DATA from ITUNES and  SET it to APP
@@ -545,17 +768,27 @@ $i++;
 //var_dump($data);
 //echo "\n";
             //обновляем данные аппы
-            if($data != false){
-                $app->setName($data['name']);
-                $app->setIconUrl($data['iconUrl60']);
+            if($data){
+                $changes = [];
+                if($app->getName() != $data['name']){
+                    $changes['name'] = ['old' => $app->getName(), 'new' => $data['name']];
+                    $app->setName($data['name']);
+                }
+                if($app->getIconUrl() != $data['iconUrl60']){
+                    $changes['iconUrl'] = ['old' => $app->getIconUrl(), 'new' => $data['iconUrl60']];
+                    $app->setIconUrl($data['iconUrl60']);
+                }
+
+                if(count($changes)){
+                    $i++;
+                }
+
+                if($i % 100 == 0){
+                    $em->flush();
+                }
 //echo "{$data['name']}:{$data['iconUrl60']}\n";
             }
 
-            if($i % 100 == 0){
-                $em->flush();
-            }
-
-$i++;
 //echo "$i/$total\n";
         }
 
@@ -568,57 +801,74 @@ $i++;
         echo "It works!\n\n";
 
         try {
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*I*/       $this->jsonApiToDb();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*II.1*/    $this->updateOffers();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*II.2*/    $this->removeOffers();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /**/        $this->resolveFinalUrlTask();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*III*/     $this->updateOffersPlatform();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*IV*/      $this->tieOffersToApp();
-echo "\n ===memory: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
             /*V*/       $this->loadItunesAppData();
+
+            echo "\n ==MEMORY==: ".memory_get_usage()/(1024*1024) . "\n";
+
+            echo "\nFINISHED!\n";
         }
         catch (\Exception $e){
+            echo "Фатальная ошибка: {$e->getMessage()}\n";
 
             $Log = $this->container->get('CronLogService');
-
             $Log->save('FAIL !', $e->getMessage());
         }
 
     }
 
 
-    /**
-     * Запросить данные из API по партнерской ссылке
-     *
-     * @param $api урл
-     * @param $decode вернеть json строку либо уже декодированную в array
-     * @return array || string
-     */
-    protected function requestApi($api, $decode = true)
-    {
-        $buzz = $this->container->get('buzz.browser');
-        try{
-            $response = $buzz->get($api);
-        }
-        catch(\Exception $e){
-            throw new \Exception("Таймаут http запроса: $api.\n");
-//            echo ;
-//            return false;
-        }
-
-        $json = $json_raw = $response->getContent();
-
-        if($decode){
-            $json = json_decode($json_raw, true);
-        }
-
-        return $json;
-    }
+//    /**
+//     * Запросить данные из API по партнерской ссылке
+//     *
+//     * @param $api урл
+//     * @param $decode вернеть json строку либо уже декодированную в array
+//     * @return array || string
+//     */
+//    protected function requestApi($api, $decode = true)
+//    {
+//        $buzz = $this->container->get('buzz.browser');
+//        try{
+//            $response = $buzz->get($api);
+//        }
+//        catch(\Exception $e){
+//            throw new \Exception("Таймаут http запроса: $api.\n");
+////            echo ;
+////            return false;
+//        }
+//
+//        $json = $json_raw = $response->getContent();
+//
+//        if($decode){
+//            $json = json_decode($json_raw, true);
+//        }
+//
+//        return $json;
+//    }
 
 }

@@ -10,6 +10,8 @@
             <td width="100px">{{ offer.name }}</td>
             <td width="50px">{{ offer.payout }}</td>
             <td width="200px"><a href="{{ offer.getPreviewUrl|raw }}" target="_blank">{{ offer.getPreviewUrl|raw|slice(0,100) }}</a></td>
+            <td width="200px"><a href="{{ offer.getFinalUrl|raw }}" target="_blank">{{ offer.getFinalUrl|raw|slice(0,100) }}</a></td>
+            <td width="30px">{{ offer.platform.name }}</td>
             <td width="10%">{% for device in offer.getDevices %}<span class="label label-info">{{ device.name }}</span> {% endfor %}</td>
             <td width="20%">{% for country in offer.getCountries %}<span class="label label-info">{{ country.code }}</span> {% endfor %}</td>
         </tr>

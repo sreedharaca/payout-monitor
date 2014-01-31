@@ -51,9 +51,6 @@ class AffiliateController extends Controller
 
         if ($form->isValid()) {
             $em = $this->getDoctrine()->getManager();
-            $aff_json = new AffiliateJson();
-            $entity->setAffiliateJson($aff_json);
-            $em->persist($aff_json);
             $em->persist($entity);
             $em->flush();
 
