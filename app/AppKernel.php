@@ -33,7 +33,8 @@ class AppKernel extends Kernel
             new Mopa\Bundle\BootstrapBundle\MopaBootstrapBundle(),
             new Katana\ImportBundle\KatanaImportBundle(),
             new Katana\StatusBundle\KatanaStatusBundle(),
-            new Anchovy\CURLBundle\AnchovyCURLBundle()
+            new Anchovy\CURLBundle\AnchovyCURLBundle(),
+            new Katana\LoginBundle\KatanaLoginBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {
