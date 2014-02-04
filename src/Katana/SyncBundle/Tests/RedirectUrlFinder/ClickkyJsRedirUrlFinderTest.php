@@ -87,9 +87,6 @@ class ClickkyJsRedirUrlFinderTest extends WebTestCase
 													"</div>" +
 													"<br>" +
 													"<div id='shortLinkInstruct'>" +
-													"<img src=\"/modules/API/img/warning.gif\"/>"+
-													"<div>" + data.noEmail + " \"" + shortLink + "\" </div>" +
-													"</div>"+
 											"</div>");
 							//$("#emailInput").css("color","yellowgreen");
 							else

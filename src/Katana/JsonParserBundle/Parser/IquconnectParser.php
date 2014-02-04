@@ -41,11 +41,11 @@ class IquconnectParser extends BaseParser{
             }
         }
 
-        $data = [];
+        $data = array();
 
         foreach ($xml->offers->offer as $offer)
         {
-            $row = [];
+            $row = array();
 
             $row['external_id'] = (int)$offer->offer_id;
             $row['name'] = $offer->offer_name;
@@ -56,9 +56,9 @@ class IquconnectParser extends BaseParser{
             /***
              * Страны
              */
-            $row['countries'] = [];
+            $row['countries'] = array();
 
-            $country_codes = [];
+            $country_codes = array();
 
             if( isset($offer->allowed_countries->country) )
             {
@@ -78,7 +78,7 @@ class IquconnectParser extends BaseParser{
                 }
             }
 
-            $row['devices'] = [];
+            $row['devices'] = array();
 
             $row['platform'] = null;
 

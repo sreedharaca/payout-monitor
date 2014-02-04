@@ -29,11 +29,11 @@ class ClicksmobParser extends BaseParser {
     {
         $json = json_decode($json_str, true);
 
-        $data = [];
+        $data = array();
 
         foreach ($json as $offer)
         {
-            $row = [];
+            $row = array();
 
             $row['external_id'] = (int)$offer['id'];
             $row['name'] = $offer['name'];
@@ -42,7 +42,7 @@ class ClicksmobParser extends BaseParser {
              * Payout
              */
             //берем максимальную из всех ставок
-            $payouts = [];
+            $payouts = array();
             foreach($offer['userPayouts'] as $payout_arr)
             {
                 $payouts[] = floatval($payout_arr['payout']);
@@ -55,9 +55,9 @@ class ClicksmobParser extends BaseParser {
             /***
              * Страны
              */
-            $row['countries'] = [];
+            $row['countries'] = array();
 
-            $country_names = [];
+            $country_names = array();
             foreach ($offer['userPayouts'] as $payout_arr) {
                 $country_names = array_merge($country_names, array_map("trim", explode(',', $payout_arr['countryNames'])));
             }
@@ -76,7 +76,7 @@ class ClicksmobParser extends BaseParser {
             /***
              * Девайсы
              */
-            $row['devices'] = [];
+            $row['devices'] = array();
 
             $row['platform'] = null;
 

@@ -769,13 +769,13 @@ $i++;
 //echo "\n";
             //обновляем данные аппы
             if($data){
-                $changes = [];
+                $changes = array();
                 if($app->getName() != $data['name']){
-                    $changes['name'] = ['old' => $app->getName(), 'new' => $data['name']];
+                    $changes['name'] = array('old' => $app->getName(), 'new' => $data['name']);
                     $app->setName($data['name']);
                 }
                 if($app->getIconUrl() != $data['iconUrl60']){
-                    $changes['iconUrl'] = ['old' => $app->getIconUrl(), 'new' => $data['iconUrl60']];
+                    $changes['iconUrl'] = array('old' => $app->getIconUrl(), 'new' => $data['iconUrl60']);
                     $app->setIconUrl($data['iconUrl60']);
                 }
 

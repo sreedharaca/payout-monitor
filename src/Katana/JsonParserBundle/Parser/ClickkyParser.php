@@ -9,16 +9,14 @@ class ClickkyParser extends BaseParser
 
     public function parse( $json = null )
     {
-//        if(!$json){ $json = $this->json; }
-
         $array = json_decode($json, true);
 
-//        var_dump($array['data']);
-
         $data = array();
+
         foreach($array['offers'] as $offer)
         {
             $row = array();
+
             $row['external_id'] = (int)$offer['offer_id'];
             $row['name']        = $offer['name'];
             $row['payout']      = sprintf("%.2f", floatval($offer['payout']));
@@ -57,7 +55,6 @@ class ClickkyParser extends BaseParser
 
             $data[] = $row;
         }
-//        var_dump($data);
 
         return $data;
     }

@@ -45,11 +45,11 @@ class StatusController extends Controller
         /** Nets */
         $Affiliates = $em->getRepository('KatanaAffiliateBundle:Affiliate')->findAllAffiliates();
 
-        $nets = [];
+        $nets = array();
 
         foreach($Affiliates as $Affiliate)
         {
-            $aff_stats = [];
+            $aff_stats = array();
 
             $aff_stats['name'] = $Affiliate->getName();
 
@@ -72,20 +72,20 @@ class StatusController extends Controller
             $nets[] = $aff_stats;
         }
 
-        return [
-            'offers' => [
+        return array(
+            'offers' => array(
                 'total' => $offerTotal[0][1],
                 'ios'   => $offerIos[0][1],
                 'android'=>$offerAndroid[0][1],
                 'web'   => $offerWeb[0][1]
-            ],
-            'apps'  => [
+            ),
+            'apps'  => array(
                 'total' => $appTotal[0][1],
                 'ios'   => $appIos[0][1],
                 'android'=>$appAndroid[0][1],
                 'web'   => $appWeb[0][1]
-            ],
+            ),
             'nets'  => $nets
-        ];
+        );
     }
 }

@@ -38,11 +38,11 @@ class GlispaParser extends BaseParser{
             }
         }
 
-        $data = [];
+        $data = array();
 
         foreach ($xml->xpath('/data/campaign') as $offer)
         {
-            $row = [];
+            $row = array();
 
             $row['external_id'] = (int)$offer['glispaID'];
             $row['name'] = $offer['name'];
@@ -58,7 +58,7 @@ class GlispaParser extends BaseParser{
             /***
              * Страны
              */
-            $row['countries'] = [];
+            $row['countries'] = array();
 
             $country_codes = array_map( "trim", explode(' ', $offer->countries));
             foreach($country_codes as $country_code)
@@ -73,7 +73,7 @@ class GlispaParser extends BaseParser{
             /***
              * Девайсы
              */
-            $row['devices'] = [];
+            $row['devices'] = array();
 
             $Device = $this->container->get('doctrine')->getRepository('KatanaDictionaryBundle:Device')->findInString($row['name']);
 

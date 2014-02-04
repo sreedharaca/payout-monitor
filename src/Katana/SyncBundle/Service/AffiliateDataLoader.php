@@ -118,15 +118,15 @@ class AffiliateDataLoader {
         $curl = $this->container->get('anchovy.curl');
 
         $curl->setURL($url);
-        $curl->setMethod('GET', []);
+        $curl->setMethod('GET', array());
 
-        $curl->setOptions([
+        $curl->setOptions(array(
             'CURLOPT_SSL_VERIFYHOST'=> 0,
             'CURLOPT_SSL_VERIFYPEER'=> 0,
             'CURLOPT_TIMEOUT'    => 180,
             'CURLOPT_COOKIEJAR'  => "cookie.txt",
             'CURLOPT_COOKIEFILE' => "cookie.txt"
-        ]);
+        ));
 
         try{
             $content = $curl->execute();
