@@ -156,7 +156,7 @@ class Offer
     protected $letter;
 
     /**
-     * @ORM\OneToMany(targetEntity="Katana\OfferBundle\Entity\PayoutHistory", mappedBy="offer", cascade={"remove", "persist"})
+     * @ORM\OneToMany(targetEntity="Katana\OfferBundle\Entity\PayoutHistory", mappedBy="offer", cascade={"remove"})
      */
     protected $payouts;
 
@@ -767,38 +767,5 @@ class Offer
     public function getFinalUrl()
     {
         return $this->final_url;
-    }
-
-    /**
-     * Add payouts
-     *
-     * @param \Katana\OfferBundle\Entity\PayoutHistory $payouts
-     * @return Offer
-     */
-    public function addPayout(\Katana\OfferBundle\Entity\PayoutHistory $payouts)
-    {
-        $this->payouts[] = $payouts;
-    
-        return $this;
-    }
-
-    /**
-     * Remove payouts
-     *
-     * @param \Katana\OfferBundle\Entity\PayoutHistory $payouts
-     */
-    public function removePayout(\Katana\OfferBundle\Entity\PayoutHistory $payouts)
-    {
-        $this->payouts->removeElement($payouts);
-    }
-
-    /**
-     * Get payouts
-     *
-     * @return \Doctrine\Common\Collections\Collection 
-     */
-    public function getPayouts()
-    {
-        return $this->payouts;
     }
 }

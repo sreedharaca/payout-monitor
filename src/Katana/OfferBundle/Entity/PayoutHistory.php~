@@ -1,0 +1,100 @@
+<?php
+
+namespace Katana\OfferBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * PayoutHistory
+ *
+ * @ORM\Table()
+ * @ORM\Entity(repositoryClass="Katana\OfferBundle\Entity\PayoutHistoryRepository")
+ */
+class PayoutHistory
+{
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="payout", type="float")
+     */
+    private $payout;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created", type="datetime")
+     */
+    private $created;
+
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Katana\OfferBundle\Entity\Offer", inversedBy="payouts")
+     * @ORM\JoinColumn(name="offer_id", referencedColumnName="id")
+     */
+    protected $offer;
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set payout
+     *
+     * @param float $payout
+     * @return PayoutHistory
+     */
+    public function setPayout($payout)
+    {
+        $this->payout = $payout;
+    
+        return $this;
+    }
+
+    /**
+     * Get payout
+     *
+     * @return float 
+     */
+    public function getPayout()
+    {
+        return $this->payout;
+    }
+
+    /**
+     * Set created
+     *
+     * @param \DateTime $created
+     * @return PayoutHistory
+     */
+    public function setCreated($created)
+    {
+        $this->created = $created;
+    
+        return $this;
+    }
+
+    /**
+     * Get created
+     *
+     * @return \DateTime 
+     */
+    public function getCreated()
+    {
+        return $this->created;
+    }
+}

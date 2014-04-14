@@ -17,10 +17,10 @@ class OfferFilterType  extends AbstractType{
                 'multiple' => false,
                 'empty_value' => '',
                 'class' => 'KatanaAffiliateBundle:Affiliate',
-                'label' => 'Партнер',
+                'label' => 'Сетка',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('a')->add('orderBy', 'a.id ASC');},
-                'attr' => array('class' => "chosen", 'ng-model'=>'formData.affiliate' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.affiliate' , 'ng-change'=>'submit()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -32,7 +32,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Страна',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('c')->add('orderBy', 'c.code ASC');},
-                'attr' => array('class' => "chosen", 'ng-model'=>'formData.country' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.country' , 'ng-change'=>'submit()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -44,7 +44,7 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Платформа',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('p')->add('orderBy', 'p.id ASC');},
-                'attr' => array('class' => "chosen", 'ng-model'=>'formData.platform' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.platform' , 'ng-change'=>'submit()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
@@ -56,28 +56,28 @@ class OfferFilterType  extends AbstractType{
                 'label' => 'Девайс',
                 'required' => false,
                 'query_builder' => function(EntityRepository $er) {return $er->createQueryBuilder('d')->add('orderBy', 'd.name ASC');},
-                'attr' => array('class' => "chosen", 'ng-model'=>'formData.device' , 'ng-change'=>'do()'),
+                'attr' => array('class' => "chosen", 'ng-model'=>'formData.device' , 'ng-change'=>'submit()'),
                 'constraints' => array(
                     new Assert\Type(array('type' => 'object')),
                 )
             ))
             ->add('incentive', 'checkbox', array(
                     'value' => false,
-                    'attr' => array('title'=>'Оплачено', 'ng-model'=>'formData.incentive' , 'ng-change'=>'do()'),
+                    'attr' => array('title'=>'Оплачено', 'ng-model'=>'formData.incentive' , 'ng-change'=>'submit()'),
                     'label' => 'Incentive',
                     //'attr'     => array('checked'   => 'checked'),
                     'required'  => false)
             )
             ->add('new', 'checkbox', array(
                     'value' => false,
-                    'attr' => array('title'=>'Оплачено', 'ng-model'=>'formData.new' , 'ng-change'=>'do()'),
+                    'attr' => array('title'=>'Оплачено', 'ng-model'=>'formData.new' , 'ng-change'=>'submit()'),
                     'label' => 'Новые',
                     //'attr'     => array('checked'   => 'checked'),
                     'required'  => false)
             )
 //            ->add('search', 'text', array(
 //                    'value' => false,
-//                    'attr' => array('placeholder'=>'Введите название', 'ng-model'=>'formData.search' /*, 'ng-change'=>'do()'*/),
+//                    'attr' => array('placeholder'=>'Введите название', 'ng-model'=>'formData.search' /*, 'ng-change'=>'submit()'*/),
 //                    'label' => 'Поиск',
                     //'attr'     => array('checked'   => 'checked'),
 //                    'required'  => false)

@@ -123,9 +123,8 @@ form{
     vertical-align: top;
 }
 
-
 .popover{
-    max-width: 70%;
+    max-width: 50%;
 }
 
 .clickable {
@@ -166,12 +165,4 @@ form{
 .v-narrow {
     margin-top: 10px;
     margin-bottom: 10px;
-}
-
-.text-left {
-    text-align: left;
-}
-
-.nowrap {
-    white-space: nowrap;
 }

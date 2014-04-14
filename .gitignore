@@ -11,6 +11,9 @@
 /composer.phar
 /.idea/
 deploy.bat
-/#deploy/*
+/.deploy/
 src.zip
 vendor.zip
+auth.php
+alter.sql
+cookie.txt

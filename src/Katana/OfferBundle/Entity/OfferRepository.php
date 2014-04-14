@@ -4,11 +4,14 @@ namespace Katana\OfferBundle\Entity;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Query\ResultSetMapping;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Katana\DictionaryBundle\Entity\Device;
 use Katana\DictionaryBundle\Entity\Platform;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Katana\OfferBundle\Entity\App;
 use Katana\AffiliateBundle\Entity\Affiliate;
+use Katana\OfferBundle\Entity\Offer;
 
 /**
  * OfferRepository
@@ -25,7 +28,7 @@ class OfferRepository extends EntityRepository
             ->leftJoin('offer.app', 'app')
             ->leftJoin('offer.devices', 'd')
             ->leftJoin('offer.countries', 'c')
-//            ->leftJoin('offer.affiliate', 'a') //TODO json данные аффилиата хранить в отдельной таблице чтобы без проблем делать джоин аффилиата
+//            ->leftJoin('offer.affiliate', 'a')
 //            ->orderBy('offer.' . $sort, $order);
             ->where('offer.deleted != 1')
         ;
@@ -228,43 +231,6 @@ class OfferRepository extends EntityRepository
         return $qb->getQuery()->execute();
     }
 
-    /***
-     * Найти конкурентов для данного оффера
-     */
-    public function findCompetitors($id){
-
-        if(!$id){
-            throw new NotFoundHttpException("Не передан id оффера.");
-        }
-
-        $offer = $this->find($id);
-
-        if(empty($offer)){
-            throw new NotFoundHttpException("Оффер не найден.");
-        }
-
-        $app = $offer->getApp();
-
-        //нет конкурентов
-        if(empty($app)){
-            return null;
-        }
-
-        $qb = $this->createQueryBuilder('offer')
-            ->select('offer, d, c, a, app')
-            ->join('offer.app', 'app')
-            ->leftJoin('offer.devices', 'd')
-            ->leftJoin('offer.countries', 'c')
-            ->leftJoin('offer.affiliate', 'a')
-            ->where('offer.id != :id')
-            ->setParameter(':id', $id)
-            ->andWhere('app.id = :app_id')
-            ->setParameter('app_id', $app->getId())
-        ;
-
-        return $qb->getQuery()->execute();
-    }
-
     public function findBestByApp(App $app){
 
         $qb = $this->createQueryBuilder('offer')
@@ -373,7 +339,491 @@ class OfferRepository extends EntityRepository
         return $qb->getQuery()->execute();
     }
 
+    /***********************************************
+     * TEST
+     */
+    public function getMaxPayoutOffersIds()
+    {
+        /** GET MAX OFFERS IDS */
+        $rsm = new ResultSetMapping();
+        $rsm->addScalarResult('id', 'id');
 
+        $main_query = <<<Query
+        SELECT
+            o.id
+        FROM
+            offer AS o
+        INNER JOIN
+            (SELECT
+                offer.app_id AS app_id,
+                max(offer.payout) AS max_payout
+            FROM
+                offer
+            WHERE
+                offer.deleted = 0 AND
+                offer.active = 1
+            GROUP BY
+                offer.app_id
+            ) AS x
+        ON
+            (o.app_id = x.app_id AND
+            o.payout = x.max_payout)
+Query;
+
+        $query = $this->_em->createNativeQuery($main_query, $rsm);
+
+        $result = $query->getResult();
+
+        $offer_ids = array();
+
+        foreach($result as $r)
+        {
+            $offer_ids[] = $r['id'];
+        }
+
+        return $offer_ids;
+    }
+
+
+    public function getTest($data)
+    {
+        $qb = $this->createQueryBuilder('offer')
+//            ->select('offer.id as offer_id, app.id as app_id, offer.payout as payout')
+            ->select('offer, app, a, p, c, d')
+            ->join('offer.app', 'app')
+            ->leftJoin('offer.affiliate', 'a')
+            ->leftJoin('offer.platform', 'p')
+            ->leftJoin('offer.countries', 'c')
+            ->leftJoin('offer.devices', 'd')
+        ;
+
+        $qb->where('offer.active = 1')
+            ->andWhere('offer.deleted = 0')
+        ;
+
+        /** OFFER IDS  */
+//        if( ! empty($offer_ids) )
+//        {
+//            $qb->andWhere('offer.id IN (:offer_ids)')
+//                ->setParameter('offer_ids', $offer_ids);
+//        }
+
+        /** Affiliate */
+        if( !empty($data['affiliate']) )
+        {
+            $qb
+                ->andWhere('a.id = :affiliate')
+                ->setParameter('affiliate', $data['affiliate']);
+        }
+
+        /** Страна */
+        if( !empty($data['country']) && is_array($data['country']) && count($data['country'])>0 )
+        {
+            $country_ids = array();
+            foreach($data['country'] as $country){
+                $country_ids[] = $country;
+            }
+
+            $qb
+                ->andWhere('c.id IN (:country_ids)')
+                ->setParameter('country_ids', $country_ids);
+        }
+
+        /** Платформа */
+        if( !empty($data['platform']) && is_array($data['platform']) && count($data['platform'])>0 )
+        {
+            $platform_ids = array();
+            foreach($data['platform'] as $platform){
+                $platform_ids[] = $platform;
+            }
+            $qb
+                ->andWhere('p.id IN (:platform_ids)')
+                ->setParameter('platform_ids', $platform_ids );
+        }
+
+        /** Девайс */
+        if( !empty($data['device']) && is_array($data['device']) && count($data['device'])>0 )
+        {
+            $device_ids = array();
+            foreach($data['device'] as $device){
+                $device_ids[] = $device;
+            }
+            $qb
+                ->andWhere('d.id IN (:device_ids)')
+                ->setParameter('device_ids', $device_ids );
+        }
+
+        /** Incent */
+        if( isset($data['incentive']) && $data['incentive'] )
+        {
+            $qb->andWhere('offer.incentive = 1');
+        }
+
+        /** New */
+        if( isset($data['new']) && $data['new'] )
+        {
+            $qb->andWhere('offer.new = 1');
+        }
+
+        /** Search */
+        if( !empty($data['search']))
+        {
+            $qb->andWhere('lower(offer.name) LIKE :search OR lower(app.name) LIKE :search')
+                ->setParameter('search', strtolower('%' . $data['search'] . '%'));
+        }
+
+
+//        /** Группировка */
+//        $qb->groupBy('offer.app');
+
+
+//        /** Сортировка
+//         *
+//         * payout   => offer.payout
+//         * platform => p.name
+//         * network  => affiliate.name
+//         * name     => offer.name
+//         */
+
+//        switch($data['sort_column']){
+//            case 'name':
+//                $sort_column = 'offer.name';
+//                break;
+//            case 'platform':
+//                $sort_column = 'p.name';
+//                break;
+//            case 'network':
+//                $sort_column = 'a.name';
+//                break;
+//            default: // 'payout'
+//                $sort_column = 'offer.payout';
+//                break;
+//        }
+
+//        $sort_dir = $data['sort_asc'] === true ? 'ASC' : 'DESC';
+
+//        $qb->orderBy($sort_column, $sort_dir);
+
+
+//        /** Пагинация */
+//        if($offset){
+//            $qb->setFirstResult($offset);
+//        }
+
+//        $qb->setMaxResults($limit = 50);
+
+//        $paginator = new Paginator($qb->getQuery(), $fetchJoinCollection = false);
+
+//        return $paginator;
+
+        return $qb->getQuery()->execute();
+
+    }
+
+
+    public function SortAndLimitByOfferIds($offer_ids, $sortData, $Offset = 0)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('offer, d, c, a, app, p')
+            ->join('offer.app', 'app')
+            ->leftJoin('offer.devices', 'd')
+            ->leftJoin('offer.countries', 'c')
+            ->leftJoin('offer.affiliate', 'a')
+            ->leftJoin('offer.platform', 'p')
+        ;
+
+//        $qb->where('offer.active = 1')
+//            ->andWhere('offer.deleted = 0')
+//        ;
+
+        /** OFFER IDS  */
+        if( ! empty($offer_ids) )
+        {
+            $qb->andWhere('offer.id IN (:offer_ids)')
+                ->setParameter('offer_ids', $offer_ids);
+        }
+
+
+        switch($sortData['sort_column']){
+            case 'name':
+                $sort_column = 'offer.name';
+                break;
+            case 'platform':
+                $sort_column = 'p.name';
+                break;
+            case 'network':
+                $sort_column = 'a.name';
+                break;
+            default: // 'payout'
+                $sort_column = 'offer.payout';
+                break;
+        }
+
+        $sort_dir = $sortData['sort_asc'] === true ? 'ASC' : 'DESC';
+
+        $qb->orderBy($sort_column, $sort_dir);
+
+
+        /** Пагинация */
+        if($Offset){
+            $qb->setFirstResult($Offset);
+        }
+
+        $qb->setMaxResults($limit = 50);
+
+        $paginator = new Paginator($qb->getQuery(), $fetchJoinCollection = true);
+
+        return $paginator;
+    }
+
+    public function getWithBestPayoutsByAjaxData($data, $offset = 0)
+    {
+        $qb = $this->createQueryBuilder('offer')
+            ->select('offer, d, c, a, app, p')
+            ->join('offer.app', 'app')
+            ->leftJoin('offer.devices', 'd')
+            ->leftJoin('offer.countries', 'c')
+            ->leftJoin('offer.affiliate', 'a')
+            ->leftJoin('offer.platform', 'p')
+        ;
+
+        $qb->where('offer.active = 1')
+            ->andWhere('offer.deleted = 0')
+        ;
+
+        /** Affiliate */
+        if( !empty($data['affiliate']) )
+        {
+            $qb
+//                ->join('offer.affiliate', 'affiliate')
+                ->andWhere('a.id = :affiliate')
+                ->setParameter('affiliate', $data['affiliate']);
+        }
+
+        /** Страна */
+        if( !empty($data['country']) && is_array($data['country']) && count($data['country'])>0 )
+        {
+            $country_ids = array();
+            foreach($data['country'] as $country){
+                $country_ids[] = $country;
+            }
+
+            $qb
+//                ->join('offer.countries', 'c')
+                ->andWhere('c.id IN (:country_ids)')
+                ->setParameter('country_ids', $country_ids);
+        }
+
+        /** Платформа */
+        if( !empty($data['platform']) && is_array($data['platform']) && count($data['platform'])>0 )
+        {
+            $platform_ids = array();
+            foreach($data['platform'] as $platform){
+                $platform_ids[] = $platform;
+            }
+            $qb
+//                ->leftJoin('offer.platform', 'p')
+                ->andWhere('p.id IN (:platform_ids)')
+                ->setParameter('platform_ids', $platform_ids );
+        }
+
+        /** Девайс */
+        if( !empty($data['device']) && is_array($data['device']) && count($data['device'])>0 )
+        {
+            $device_ids = array();
+            foreach($data['device'] as $device){
+                $device_ids[] = $device;
+            }
+            $qb
+//                ->join('offer.devices', 'd')
+                ->andWhere('d.id IN (:device_ids)')
+                ->setParameter('device_ids', $device_ids );
+        }
+
+        /** Incent */
+        if( $data['incentive'] )
+        {
+            $qb->andWhere('offer.incentive = 1');
+//                ->setParameter('incentive', $data['incentive']);
+        }
+
+        /** New */
+        if( $data['new'] )
+        {
+            $qb->andWhere('offer.new = 1');
+//                ->setParameter('new', $data['new']);
+        }
+
+        /** Search */
+        if( !empty($data['search']))
+        {
+            $qb->andWhere('lower(offer.name) LIKE :search OR lower(app.name) LIKE :search')
+                ->setParameter('search', strtolower('%' . $data['search'] . '%'));
+        }
+
+
+        /** Группировка */
+        $qb->groupBy('offer.app');
+
+
+        /** Сортировка
+         *
+         * payout   => offer.payout
+         * platform => p.name
+         * network  => affiliate.name
+         * name     => offer.name
+         */
+
+        switch($data['sort_column']){
+            case 'name':
+                $sort_column = 'offer.name';
+                break;
+            case 'platform':
+                $sort_column = 'p.name';
+                break;
+            case 'network':
+                $sort_column = 'a.name';
+                break;
+            default: // 'payout'
+                $sort_column = 'offer.payout';
+                break;
+        }
+
+        $sort_dir = $data['sort_asc'] === true ? 'ASC' : 'DESC';
+
+        $qb->orderBy($sort_column, $sort_dir);
+
+
+        /** Пагинация */
+        if($offset){
+            $qb->setFirstResult($offset);
+        }
+
+        $qb->setMaxResults($limit = 50);
+
+        $paginator = new Paginator($qb->getQuery(), $fetchJoinCollection = true);
+
+        return $paginator;
+
+//        return $query->execute();
+    }
+
+
+    /***
+     * Получить аналоги оффера
+     */
+    public function getAnalogs(Offer $offer, $data)
+    {
+        $app = $offer->getApp();
+
+        //нет конкурентов
+        if(empty($app)){
+            return null;
+        }
+
+        $qb = $this->createQueryBuilder('offer')
+            ->select('offer, d, c, a, p, app')
+            ->leftJoin('offer.app', 'app')
+            ->leftJoin('offer.devices', 'd')
+            ->leftJoin('offer.countries', 'c')
+            ->leftJoin('offer.affiliate', 'a')
+            ->leftJoin('offer.platform', 'p')
+
+            ->where('offer.id != :offer_id')
+            ->setParameter('offer_id', $offer->getId())
+
+            ->andWhere('app.id = :app_id')
+            ->setParameter('app_id', $app->getId())
+        ;
+
+        $qb->andWhere('offer.active = 1')
+            ->andWhere('offer.deleted = 0')
+        ;
+
+
+        /** Affiliate */
+        if( !empty($data['affiliate']) )
+        {
+            $qb
+//                ->join('offer.affiliate', 'affiliate')
+                ->andWhere('a.id = :affiliate')
+                ->setParameter('affiliate', $data['affiliate']);
+        }
+
+        /** Страна */
+        if( !empty($data['country']) && is_array($data['country']) && count($data['country'])>0 )
+        {
+            $country_ids = array();
+            foreach($data['country'] as $country){
+                $country_ids[] = $country;
+            }
+
+            $qb
+//                ->join('offer.countries', 'c')
+                ->andWhere('c.id IN (:country_ids)')
+                ->setParameter('country_ids', $country_ids);
+        }
+
+        /** Платформа */
+        if( !empty($data['platform']) && is_array($data['platform']) && count($data['platform'])>0 )
+        {
+            $platform_ids = array();
+            foreach($data['platform'] as $platform){
+                $platform_ids[] = $platform;
+            }
+            $qb
+//                ->leftJoin('offer.platform', 'p')
+                ->andWhere('p.id IN (:platform_ids)')
+                ->setParameter('platform_ids', $platform_ids );
+        }
+
+        /** Девайс */
+        if( !empty($data['device']) && is_array($data['device']) && count($data['device'])>0 )
+        {
+            $device_ids = array();
+            foreach($data['device'] as $device){
+                $device_ids[] = $device;
+            }
+            $qb
+//                ->join('offer.devices', 'd')
+                ->andWhere('d.id IN (:device_ids)')
+                ->setParameter('device_ids', $device_ids );
+        }
+
+        /** Incent */
+        if( $data['incentive'] )
+        {
+            $qb->andWhere('offer.incentive = 1');
+//                ->setParameter('incentive', $data['incentive']);
+        }
+
+        /** New */
+        if( $data['new'] )
+        {
+            $qb->andWhere('offer.new = 1');
+//                ->setParameter('new', $data['new']);
+        }
+
+        /** Search */
+        if( !empty($data['search']))
+        {
+            $qb->andWhere('lower(offer.name) LIKE :search OR lower(app.name) LIKE :search')
+                ->setParameter('search', strtolower('%' . $data['search'] . '%'));
+        }
+
+        $qb->orderBy('offer.payout', 'DESC');
+
+        return $qb->getQuery()->execute();
+    }
+
+
+    /***
+     * Получить app_id с учетом фильтров
+     */
+    public function getApps($formData)
+    {
+
+    }
 
     /***
      * Получение суммарной статы

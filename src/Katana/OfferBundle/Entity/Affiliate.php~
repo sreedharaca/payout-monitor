@@ -1,0 +1,139 @@
+<?php
+
+namespace Katana\HasoffersBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+
+/**
+ * Affiliate
+ *
+ * @ORM\Table()
+ * @ORM\Entity
+ */
+class Affiliate
+{
+
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=255)
+     */
+    private $name;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="api", type="string", length=255)
+     */
+    private $api;
+
+    /**
+     */
+    protected $offers;
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set name
+     *
+     * @param string $name
+     * @return Affiliate
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    
+        return $this;
+    }
+
+    /**
+     * Get name
+     *
+     * @return string 
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set api
+     *
+     * @param string $api
+     * @return Affiliate
+     */
+    public function setApi($api)
+    {
+        $this->api = $api;
+    
+        return $this;
+    }
+
+    /**
+     * Get api
+     *
+     * @return string 
+     */
+    public function getApi()
+    {
+        return $this->api;
+    }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->offers = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+    
+    /**
+     * Add offers
+     *
+     * @param \Katana\HasoffersBundle\Entity\Offer $offers
+     * @return Affiliate
+     */
+    public function addOffer(\Katana\HasoffersBundle\Entity\Offer $offers)
+    {
+        $this->offers[] = $offers;
+    
+        return $this;
+    }
+
+    /**
+     * Remove offers
+     *
+     * @param \Katana\HasoffersBundle\Entity\Offer $offers
+     */
+    public function removeOffer(\Katana\HasoffersBundle\Entity\Offer $offers)
+    {
+        $this->offers->removeElement($offers);
+    }
+
+    /**
+     * Get offers
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getOffers()
+    {
+        return $this->offers;
+    }
+}

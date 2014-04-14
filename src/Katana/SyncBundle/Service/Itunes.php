@@ -16,7 +16,6 @@ class Itunes
     }
 
     //TODO не распознаются Уникум офферы
-    //TODO показать список previewl_url для нераспознанных офферов
 
     public function get($id)
     {

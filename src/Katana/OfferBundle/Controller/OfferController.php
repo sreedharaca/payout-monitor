@@ -2,9 +2,11 @@
 
 namespace Katana\OfferBundle\Controller;
 
+use Doctrine\ORM\Query\ResultSetMapping;
 use Katana\OfferBundle\Lib\AppAlphabetRepository;
 use Katana\OfferBundle\Lib\LetterCategoriesGroup;
 use Katana\OfferBundle\Lib\LetterCategory;
+use Katana\SyncBundle\Service\FinderManager\RedirectUrlFinderManager;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -17,6 +19,7 @@ use Katana\OfferBundle\Lib\OfferGroup;
 use Katana\OfferBundle\Lib\App;
 use Katana\OfferBundle\Lib\OfferData;
 use Katana\OfferBundle\Lib\FilterForm;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Offer Controller.
@@ -320,7 +323,6 @@ class OfferController extends Controller
         );
     }
 
-
     private function groupByApp($offers){
 
         $apps = array();
@@ -458,36 +460,142 @@ class OfferController extends Controller
         $filter = new FilterForm();
         $filter->bind($request);
 
+        $formData = $filter->getData();
 
-        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getByAjaxData($filter->getData());
+        $Offset = $formData['offset'];
 
-        //сгруппировать офферы по App
-        //т.е. завернуть в OfferGroup
-        $offer_groups = $this->groupByApp($all_offers); // app_id => OfferGroup
 
-        //группы OfferGroup ---> App
-        //завернуть в App
-        $apps = array();
+        /** GET MAX OFFERS IDS */
+        $offer_ids = $this->getDoctrine()->getRepository('KatanaOfferBundle:Offer')->getMaxPayoutOffersIds();
 
-        foreach($offer_groups as $OfferGroup){
 
-            $apps[] = new App($OfferGroup);
-        }
+        $paginator = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getTest($filter->getData(), $Offset, $offer_ids);
 
-        $AppRepo = new AppAlphabetRepository();
-
-        foreach($apps as $app){
-            $AppRepo->addApp($app);
-        }
-
-        $data = $this->generateArrayData($AppRepo->sort());
+        $data = $this->generateArrayData2($paginator);
 
         return new JsonResponse(
             array(
                 'success'       => true,
                 'offers'        => $data,
-                'names'         => $this->collectOffersNames($all_offers)
+                'names'         => array(), //$this->collectOffersNames($all_offers),
+                'totalCount'    => count($paginator),
+                'offer_ids'     => count($offer_ids),
+                'result offers count' => count($paginator)
             )
         );
     }
+
+    private function generateArrayData2($paginator)
+    {
+        $offers = array();
+
+        foreach($paginator->getIterator() as $row)
+        {
+            //Main Offer
+            $OD = new OfferData($row);
+            $offer_data = $OD->toArray();
+            //Relative Offers
+//            $offer_data['relative_offers'] = array();
+//            $offer_data['relative_offers_count'] = $row['offers_in_app'] - 1;
+
+            $offers[] = $offer_data;
+        }
+
+        return $offers;
+    }
+
+    /**
+     *
+     * @Route("/analogs", name="offer_analogs")
+     * @Method("POST")
+     */
+    public function getAnalogs(Request $request)
+    {
+        $filter = new FilterForm();
+        $filter->bind($request);
+
+        $formData = $filter->getData();
+
+        $offer_id = $formData['offer_id'];
+
+        $em = $this->getDoctrine()->getManager();
+
+        $Offer = $em->getRepository('KatanaOfferBundle:Offer')->find($offer_id);
+
+        if(!$Offer){
+            throw $this->createNotFoundException('Оффер не найден.');
+        }
+
+        $analogs = $em->getRepository('KatanaOfferBundle:Offer')->getAnalogs($Offer, $formData);
+
+        $json_data = array();
+
+        foreach($analogs as $offer)
+        {
+            $OD = new OfferData($offer);
+
+            $json_data[] = $OD->toArray();
+        }
+
+        return new JsonResponse(
+            array(
+                'success' => true,
+                'analogs' => $json_data,
+                'formData'=> $formData
+            )
+        );
+    }
+
+    /**
+     * @Route("/test", name="offer_test")
+     * @Method("GET")
+     * @Template("KatanaOfferBundle:Offer:test.html.twig")
+     */
+    public function testAction()
+    {
+        // assert get all offers filtered by post data
+        $filter = new FilterForm();
+        $filter->bind(new Request());
+
+        $formData = $filter->getData();
+
+        $formData['affiliate'] = 1;
+        $formData['platform'] = array(1);
+
+
+        $all_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->getTest($formData);
+
+        // group by app
+        // find best offer
+        $offer_groups = $this->groupByApp($all_offers);
+
+        // get best offer ids
+        $apps = array();
+
+        foreach($offer_groups as $app_id => $OfferGroup)
+        {
+            $apps[] = new App($OfferGroup);
+        }
+
+
+        $offer_ids = array();
+
+        foreach($apps as $app)
+        {
+            $offer_ids[] = $app->getMainOffer()->getId();
+        }
+
+        // select offers with joined data, sorted, limited
+        $formData['sort_column'] = 'payout';
+        $formData['sort_asc'] = false;
+
+        $result_offers = $this->getDoctrine()->getRepository("KatanaOfferBundle:Offer")->SortAndLimitByOfferIds($offer_ids, $formData, 0);
+
+        return array(
+            'offers' => $result_offers
+        );
+
+
+    }
+
 }

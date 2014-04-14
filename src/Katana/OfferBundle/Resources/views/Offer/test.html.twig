@@ -1,0 +1,20 @@
+{% extends '::base.html.twig' %}
+
+{% block body -%}
+
+<table class="table">
+    {#<tr>#}
+        {#<th></th>#}
+    {#</tr>#}
+    {% for offer in offers %}
+    <tr>
+        <td>{{ offer.id }}</td>
+        <td>{{ offer.affiliate.name }}</td>
+        <td>{{ offer.name }}</td>
+        <td>{{ offer.payout }}</td>
+        <td>{{ offer.app.id }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -2,6 +2,7 @@
 
 namespace Katana\SyncBundle\Service;
 
+use Katana\OfferBundle\Entity\PayoutHistory;
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
 use Katana\OfferBundle\Entity\Offer;
 
@@ -20,7 +21,13 @@ class OfferFactory
         $Offer->setAffiliate($row['affiliate']);
         $Offer->setName($row['name']);
         $Offer->setExternalId($row['external_id']);
+        //Payout
         $Offer->setPayout($row['payout']);
+        //Payout History
+        $Payout = new PayoutHistory( $row['payout'] );
+        $Payout->setOffer($Offer);
+        $Offer->addPayout( $Payout );
+
         $Offer->setPreviewUrl($row['preview_url']);
         $Offer->setActive(true);
         $Offer->setDeleted(false);
@@ -64,6 +71,12 @@ class OfferFactory
             $changes['payout'] = array('old' => $Offer->getPayout(), 'new' => $row['payout']);
 
             $Offer->setPayout($row['payout']);
+
+            //добавить в Offer дочернюю сущность PayoutHistory
+            $Payout = new PayoutHistory( $changes['payout']['new'] );
+            $Payout->setOffer($Offer);
+            $Offer->addPayout( $Payout );
+
 //            $EventLog->save(Log::ACTION_PAYOUT_CHANGE, "Было {$Offer->getPayout()} стало {$row['payout']}", $Offer);
         }
 
@@ -72,7 +85,7 @@ class OfferFactory
         {
             $changes['preview_url'] = array('old' => $Offer->getPreviewUrl(), 'new' => $row['preview_url']);
 
-            $Offer->setPreviewUrl($row['preview_url']);//TODO в базу пишется с заменами & => &amp;
+            $Offer->setPreviewUrl($row['preview_url']);
         }
 
         /** Active */

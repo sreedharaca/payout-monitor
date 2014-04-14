@@ -15,4 +15,3 @@ class BaseParser{
     }
 
 }
-//TODO создать общий класс для hasoffers сеток

@@ -1,0 +1,1 @@
+7z a -r -mx=1 vendor.zip > NUL

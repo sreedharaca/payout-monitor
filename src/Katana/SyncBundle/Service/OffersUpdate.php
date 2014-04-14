@@ -5,6 +5,7 @@ namespace Katana\SyncBundle\Service;
 use Katana\AffiliateBundle\Entity\AffiliateJson;
 use Katana\AffiliateBundle\Entity\RawData;
 use Katana\DictionaryBundle\Entity\Platform;
+use Katana\OfferBundle\Entity\PayoutHistory;
 use Katana\OfferBundle\KatanaOfferBundle;
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
 use Katana\OfferBundle\Entity\Offer;
@@ -190,6 +191,9 @@ class OffersUpdate
 
                         //если оффер восстановлен из удаленных
                         if(isset($changes['deleted']) && $changes['deleted']['old'] == true){
+
+                            $Offer->setNew(true);
+
                             $EventLog->save(Log::ACTION_NEW, '', $Offer);
                             $new_rows++;
                         }
@@ -314,7 +318,7 @@ class OffersUpdate
 //                    }
 //
 //                    $Offer->setPayout($row['payout']);
-//                    $Offer->setPreviewUrl($row['preview_url']); //TODO в базу пишется с заменами & => &amp;
+//                    $Offer->setPreviewUrl($row['preview_url']);
 ////                    $Offer->setJson($row['json']);
 //                    $Offer->setActive(true);
 //                    $Offer->setDeleted(false);

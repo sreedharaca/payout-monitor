@@ -1,0 +1,125 @@
+<?php
+
+namespace Katana\OfferBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * OfferPayout
+ *
+ * @ORM\Table(name="offer_payouts")
+ * @ORM\Entity(repositoryClass="Katana\OfferBundle\Entity\OfferPayoutRepository")
+ */
+class OfferPayout
+{
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="payout", type="decimal")
+     */
+    private $payout;
+
+//    private $offer;
+//    private $country;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Offer", inversedBy="country_payouts")
+     * @ORM\JoinColumn(name="offer_id", referencedColumnName="id")
+     */
+    protected $offer;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="Katana\DictionaryBundle\Entity\Country", inversedBy="offer_payouts")
+     * @ORM\JoinColumn(name="country_id", referencedColumnName="id")
+     */
+    protected $country;
+
+
+    /**
+     * Get id
+     *
+     * @return integer 
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set payout
+     *
+     * @param float $payout
+     * @return OfferPayout
+     */
+    public function setPayout($payout)
+    {
+        $this->payout = $payout;
+    
+        return $this;
+    }
+
+    /**
+     * Get payout
+     *
+     * @return float 
+     */
+    public function getPayout()
+    {
+        return $this->payout;
+    }
+
+    /**
+     * Set offer
+     *
+     * @param \Katana\OfferBundle\Entity\Offer $offer
+     * @return OfferPayout
+     */
+    public function setOffer(\Katana\OfferBundle\Entity\Offer $offer = null)
+    {
+        $this->offer = $offer;
+    
+        return $this;
+    }
+
+    /**
+     * Get offer
+     *
+     * @return \Katana\OfferBundle\Entity\Offer 
+     */
+    public function getOffer()
+    {
+        return $this->offer;
+    }
+
+    /**
+     * Set country
+     *
+     * @param \Katana\DictionaryBundle\Entity\Country $country
+     * @return OfferPayout
+     */
+    public function setCountry(\Katana\DictionaryBundle\Entity\Country $country = null)
+    {
+        $this->country = $country;
+    
+        return $this;
+    }
+
+    /**
+     * Get country
+     *
+     * @return \Katana\DictionaryBundle\Entity\Country 
+     */
+    public function getCountry()
+    {
+        return $this->country;
+    }
+}

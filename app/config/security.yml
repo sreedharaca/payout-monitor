@@ -10,7 +10,7 @@ security:
         in_memory:
             memory:
                 users:
-                    katanaads:  { password: rus37katana, roles: [ 'ROLE_USER' ] }
+                    katanaads:  { password: newads, roles: [ 'ROLE_USER' ] }
 #                    admin: { password: adminpass, roles: [ 'ROLE_ADMIN' ] }
 
     firewalls:

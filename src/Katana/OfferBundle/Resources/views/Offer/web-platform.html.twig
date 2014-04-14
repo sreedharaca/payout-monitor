@@ -13,6 +13,8 @@
     {{ parent() }}
 
     <script src="/js/angular.min.js"></script>
+    <script src="/js/angular-resource.min.js"></script>
+
     {#<script  type="text/javascript"  src="{{ asset('/js/angular-strap-2.0.0-beta.1/src/tooltip/tooltip.js') }}"></script>#}
     {#<script  type="text/javascript"  src="{{ asset('/js/angular-strap-2.0.0-beta.1/src/popover/popover.js') }}"></script>#}
 
@@ -35,7 +37,7 @@
         <div class="well">
 
             <form class="form form-horizontal search-form" {#action="{{ path('filter_offers') }}"#} method="POST" role="form"
-                ng-controller="FilterFormCtrl" ng-submit="do()">
+                ng-controller="FilterFormCtrl" ng-submit="submit()">
 
                 <div class="form-group">
                     {#{% verbatim %}{{ showSearchHint }}{% endverbatim %}#}
@@ -90,39 +92,42 @@
                 {{ form_end(form) }}
             </form>
 
-
-
         </div>
+
 
         <div ng-controller="OffersCtrl">
 
             {% verbatim %}
-            <!--ALPHABAET LINKS-->
-            <div id="iosLetters">
-                <div ng-repeat="data in OffersData.offers">
-                    <a href="#iosLetter{{ data.letter}}">{{ data.letter }}</a>
-                </div>
-            </div>
             <table id="offers-table" class="table table-condensed" style="padding:3px;">
-                <tbody ng-repeat="data in OffersData.offers">
-                    <tr id="iosLetter{{ data.letter }}" class="anchor">
-                        <td colspan="9" class="letter-anchor">{{ data.letter }}</td>
+                <thead>
+                    <tr>
+                        <th><a href="javascript:void(0)" ng-click="sort_col('platform')">#<img src="{{ SortData.sort_asc && sort_asc_img || sort_desc_img }}" ng-show="SortData.sort_column=='platform'"></a></th>
+                        <th></th>
+                        <th class="text-left nowrap"><a href="javascript:void(0)" ng-click="sort_col('network')">Сетка<img src="{{ SortData.sort_asc && sort_asc_img || sort_desc_img }}" ng-show="SortData.sort_column=='network'"></th>
+                        <th class="text-left nowrap"><a href="javascript:void(0)" ng-click="sort_col('name')">Название<img src="{{ SortData.sort_asc && sort_asc_img || sort_desc_img }}" ng-show="SortData.sort_column=='name'"></th>
+                        <th class="text-left nowrap"><a href="javascript:void(0)" ng-click="sort_col('payout')">$$<img src="{{ SortData.sort_asc && sort_asc_img || sort_desc_img }}" ng-show="SortData.sort_column=='payout'"></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
                     </tr>
+                </thead>
+                <tbody>
                     <!--ОФФЕРЫ-->
-                    <tr ng-repeat="offer in data.offers" data-offer-id="{{ offer.id }}">
-                        <td style="max-width:40px; max-height:40px;">
+                    <tr ng-repeat="offer in OffersData.offers" data-offer-id="{{ offer.id }}">
+                        <td style="min-width:60px; max-width:40px; max-height:40px;">
                             <img class="img-rounded offer-icon" src="{{offer.platformIconUrl}}"/>
                         </td>
                         <td style="max-width:40px; max-height:40px;">
-                            <img class="img-rounded offer-icon" ng-show="offer.icon.length>0" src="{{offer.icon}}"/>
+                            <img class="img-rounded offer-icon" ng-show="offer.icon.length > 0" src="{{offer.icon}}"/>
                         </td>
-                        <td width="60px">{{ offer.partner }}</td>
-                        <td width=""><a href="{{ offer.externalUrl }}" target="_blank">{{ offer.name }}</a>
-                            <span pop-over data-offer-id="{{ offer.id }}" ng-show="offer.relative_offers.length > 0" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
-                                {{ offer.relative_offers.length ? '+' + offer.relative_offers.length : ''  }}
+                        <td width="75px">{{ offer.partner }}</td>
+                        <td width="" title="{{ offer.id }}"><a href="{{ offer.externalUrl }}" target="_blank">{{ offer.name }}</a>
+                            <span pop-over data-offer-id="{{ offer.id }}" ng-click="AnalogOffersCache.fetch(offer.id)" class="badge badge-yellow pull-right clickable" style="font-size: 0.7em;">
+                                аналоги
                             </span>
                         </td>
-                        <td width="30px">{{ offer.payout }}</td>
+                        <td width="45px">{{ offer.payout }}</td>
                         <td width="30px"><span class="label label-info">{{ offer.device }}</span></td>
                         <td width="20%">
                             <nobr>
@@ -135,6 +140,10 @@
                     </tr>
                 </tbody>
             </table>
+
+            <div style="text-align: center;">
+                <a class="btn btn-default" ng-click="showMore()" ng-show="getCurrentCount() < getTotal()">Еще</a> Показано {{ getCurrentCount() }} из {{ getTotal() }}
+            </div>
             {% endverbatim %}
         </div>
 
@@ -146,7 +155,7 @@
     <div id="popover-content" style="display: none">
         <div class="container-fluid">
             <table class="table table-condensed">
-                <tr class="" ng-repeat="offer in relative_offers">
+                <tr class="" ng-repeat="offer in AnalogOffersCache.find(offer_id)">
                     <td style="width: 40px; min-width: 30px;">
                         <img class="img-rounded offer-icon" ng-show="offer.icon.length>0" src="{{ offer.icon }}"/>
                     </td>
@@ -164,6 +173,8 @@
                     <td width="3%"><span class="label label-success" ng-if="offer.new">new</span></td>
                 </tr>
             </table>
+
+            <img src="/img/loader.gif" ng-show="AnalogOffersCache.find(offer_id) == null">
         </div>
     </div>
 
@@ -177,12 +188,15 @@
     </div>
 
     {% endverbatim %}
+
+
 {% endblock %}
 
 {% block inline_javascripts %}
 <script>
 
     var offer_filter_url = "{{ path('offer_web_ajax_filter') }}";
+    {#var offer_analogs_url = "{{ path('offer_analogs') }}";#}
 
     $(document).ready(function(){
 
@@ -208,7 +222,7 @@
 
         /** Update debug bar on each Ajax request */
         $("body").ajaxComplete(function(event, XMLHttpRequest, ajaxOption){
-            console.log(111111111);
+console.log('Ajax Completed');
             if(XMLHttpRequest.getResponseHeader('x-debug-token')) {
                 $('.sf-toolbar').remove();
 //                $('.sf-toolbar').remove();
